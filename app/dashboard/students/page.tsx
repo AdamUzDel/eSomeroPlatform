@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-//import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -25,6 +24,13 @@ export default function StudentsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const router = useRouter()
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]);
+    }
+  };
 
   useEffect(() => {
     fetchStudents()
@@ -159,7 +165,7 @@ export default function StudentsPage() {
           <UserPlus className="mr-2 h-4 w-4" />
           Add Student
         </Button>
-        <Button onClick={() => setIsUploadModalOpen(true)} disabled={isUploading} className="flex items-center">
+        <Button onClick={() => router.push('/dashboard/students/upload')} disabled={isUploading} className="flex items-center">
           <Upload className="mr-2 h-4 w-4" />
           Upload Excel
         </Button>

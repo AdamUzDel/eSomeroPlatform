@@ -1,9 +1,8 @@
 // lib/firebaseUtils.ts
 import { db, storage } from './firebase';
-import { collection, doc, setDoc, getDocs, getDoc, query, where, deleteDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, getDoc, query, where, deleteDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Student, Mark, YearData, TermData } from '../types';
-
 
 export const addStudent = async (student: Omit<Student, 'id'>): Promise<string> => {
   const docRef = doc(collection(db, 'students'));
@@ -11,9 +10,19 @@ export const addStudent = async (student: Omit<Student, 'id'>): Promise<string> 
   return docRef.id;
 };
 
-export const updateStudent = async (id: string, data: Partial<Student>): Promise<void> => {
-  await setDoc(doc(db, 'students', id), data, { merge: true });
-};
+export async function updateStudent(id: string, data: Partial<Student>) {
+  if (!id) {
+    throw new Error('Student ID is required for update');
+  }
+  
+  try {
+    const studentRef = doc(db, 'students', id);
+    await updateDoc(studentRef, data);
+  } catch (error) {
+    console.error('Error updating student:', error);
+    throw error;
+  }
+}
 
 export const deleteStudent = async (id: string): Promise<void> => {
   await deleteDoc(doc(db, 'students', id));
@@ -54,11 +63,36 @@ export const getStudentById = async (id: string): Promise<Student> => {
   }
 };
 
-export const addMark = async (studentId: string, year: string, term: string, mark: Mark): Promise<void> => {
-  const docRef = doc(db, 'marks', studentId);
-  const yearRef = doc(collection(docRef, year), term);
-  await setDoc(yearRef, mark);
-};
+export async function getStudentByName(name: string) {
+  const studentsRef = collection(db, 'students');
+  const q = query(studentsRef, where('name', '==', name));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.empty ? null : querySnapshot.docs[0].data();
+}
+
+export async function addMark(studentId: string, year: string, term: string, markData: any) {
+  if (!studentId) {
+    throw new Error('Student ID is required for adding marks');
+  }
+
+  try {
+    // Create a reference to the year document
+    const yearRef = doc(db, 'marks', studentId, year);
+
+    // Use setDoc with merge: true to ensure the year document exists
+    await setDoc(yearRef, {}, { merge: true });
+
+    // Now, set the term data as a field in the year document
+    await updateDoc(yearRef, {
+      [term]: markData
+    });
+
+    console.log(`Mark added for student ${studentId}, year ${year}, term ${term}`);
+  } catch (error) {
+    console.error('Error adding mark:', error);
+    throw error;
+  }
+}
 
 export const getMarks = async (studentId: string): Promise<YearData> => {
   const marksRef = doc(db, 'marks', studentId);
