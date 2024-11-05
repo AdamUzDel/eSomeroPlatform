@@ -62,8 +62,9 @@ export default function AddStudentForm() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream
       }
-    } catch (error) {
-      toast.error('Failed to access camera')
+    } catch (error: undefined | unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+      toast.error(`Failed to access camera: ${errorMessage}`)
     }
   }
 
@@ -156,7 +157,7 @@ export default function AddStudentForm() {
       <Card>
         <CardHeader>
           <CardTitle>Add New Student</CardTitle>
-          <CardDescription>Enter the student's details below</CardDescription>
+          <CardDescription>Enter the student&apos;s details below</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
@@ -213,7 +214,7 @@ export default function AddStudentForm() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Capture Photo</DialogTitle>
-                      <DialogDescription>Take a photo using your device's camera.</DialogDescription>
+                      <DialogDescription>Take a photo using your device&apos;s camera.</DialogDescription>
                     </DialogHeader>
                     <div className="mt-4">
                       <video ref={videoRef} autoPlay playsInline className="w-full max-w-sm mx-auto" />

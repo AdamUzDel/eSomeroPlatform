@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 export default function WelcomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white flex flex-col justify-center items-center p-4 md:p-8">
-      <h1 className="text-4xl md:text-6xl font-bold text-center mb-6">Welcome to SchoolSync</h1>
+      <h1 className="text-4xl md:text-6xl font-bold text-center mb-6">Welcome to eSomero</h1>
       <p className="text-xl md:text-2xl text-center mb-8 max-w-2xl">
         Streamline your school management with our comprehensive solution. 
         Manage students, track performance, and generate report cards effortlessly.
@@ -15,7 +15,7 @@ export default function WelcomePage() {
           <Link href="/dashboard">Enter Dashboard</Link>
         </Button>
         <Button asChild variant="outline" size="lg">
-          <Link href="#features">Learn More</Link>
+          <Link href="https://bytebasetech.com">Learn More</Link>
         </Button>
       </div>
       <div id="features" className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl">

@@ -24,13 +24,6 @@ export default function StudentsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const router = useRouter()
-  const [file, setFile] = useState<File | null>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFile(e.target.files[0]);
-    }
-  };
 
   useEffect(() => {
     fetchStudents()
@@ -136,7 +129,7 @@ export default function StudentsPage() {
   }
 
   return (
-    <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">
+    <div className="container mx-auto py-4 px-2 sm:px-6 lg:px-8">
       <Toaster />
       <h1 className="text-3xl font-bold mb-8">Student Data</h1>
       <div className="flex flex-col sm:flex-row justify-between mb-6 gap-4">

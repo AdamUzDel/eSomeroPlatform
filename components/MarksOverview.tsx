@@ -10,6 +10,8 @@ import { getStudentMarks } from '@/lib/firebaseUtils'
 import { toast } from 'sonner'
 import { Class, StudentMark } from '@/types'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { Button } from "@/components/ui/button"
+import { PlusCircle, Edit } from 'lucide-react'
 
 interface AverageMarkBySubject {
   subject: string;
@@ -27,6 +29,7 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
   const [selectedYear, setSelectedYear] = useState<string>(years[0] || '')
   const [selectedTerm, setSelectedTerm] = useState<string>(terms[0] || '')
   const [marks, setMarks] = useState<StudentMark[]>([])
+  const [subjects, setSubjects] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const router = useRouter()
 
@@ -41,10 +44,14 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
     try {
       const fetchedMarks = await getStudentMarks(selectedClass, selectedYear, selectedTerm)
       setMarks(fetchedMarks)
+      if (fetchedMarks.length > 0) {
+        setSubjects(Object.keys(fetchedMarks[0].subjects))
+      }
     } catch (error) {
       console.error('Error fetching marks:', error)
       toast.error('Failed to fetch marks. Please try again.')
       setMarks([])
+      setSubjects([])
     } finally {
       setIsLoading(false)
     }
@@ -75,10 +82,17 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Marks Overview</CardTitle>
-        <CardDescription>View and analyze student marks</CardDescription>
-      </CardHeader>
+    <CardHeader>
+      <div className="flex justify-between items-center">
+        <div>
+          <CardTitle>Marks Overview</CardTitle>
+          <CardDescription>View and analyze student marks</CardDescription>
+        </div>
+        <Button onClick={() => router.push('/dashboard/marks/add')}>
+          <PlusCircle className="mr-2 h-4 w-4" /> Add Marks
+        </Button>
+      </div>
+    </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -122,26 +136,41 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
             </div>
           ) : marks.length > 0 ? (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Average</TableHead>
-                    <TableHead>Rank</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {marks.map((student) => (
-                    <TableRow key={student.id} className="cursor-pointer hover:bg-gray-100" onClick={() => router.push(`/dashboard/students/${student.id}`)}>
-                      <TableCell>{student.name}</TableCell>
-                      <TableCell>{student.average?.toFixed(2) ?? 'N/A'}</TableCell>
-                      <TableCell>{student.rank ?? 'N/A'}</TableCell>
-                      <TableCell>{student.status ?? 'N/A'}</TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Student</TableHead>
+                      {subjects.map((subject) => (
+                        <TableHead key={subject}>{subject}</TableHead>
+                      ))}
+                      <TableHead>Total</TableHead>
+                      <TableHead>Average</TableHead>
+                      <TableHead>Rank</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {marks.map((student) => (
+                      <TableRow key={student.id} className="cursor-pointer hover:bg-gray-100" /* onClick={() => router.push(`/dashboard/students/${student.id}`)} */>
+                        <TableCell>{student.name}</TableCell>
+                        {subjects.map((subject) => (
+                          <TableCell key={subject}>{student.subjects[subject] != null ? Math.round(student.subjects[subject]) : 'N/A'}</TableCell>
+                        ))}
+                        <TableCell>{student.total != null ? Math.round(student.total) : 'N/A'}</TableCell>
+                        <TableCell>{student.average?.toFixed(2) ?? 'N/A'}</TableCell>
+                        <TableCell>{student.rank ?? 'N/A'}</TableCell>
+                        <TableCell>{student.status ?? 'N/A'}</TableCell>
+                        <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/marks/edit/${student.id}`)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
 
               <Card className="mt-8">
                 <CardHeader>

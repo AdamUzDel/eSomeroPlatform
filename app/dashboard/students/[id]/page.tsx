@@ -127,7 +127,7 @@ export default function StudentDetails() {
               <DialogHeader>
                 <DialogTitle>Are you sure you want to delete this student?</DialogTitle>
                 <DialogDescription>
-                  This action cannot be undone. This will permanently delete the student's record and all associated data.
+                  This action cannot be undone. This will permanently delete the student&apos;s record and all associated data.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>

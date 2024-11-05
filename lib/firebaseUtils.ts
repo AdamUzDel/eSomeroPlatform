@@ -1,6 +1,6 @@
 // lib/firebaseUtils.ts
 import { db, storage } from './firebase';
-import { collection, doc, setDoc, getDocs, getDoc, query, where, deleteDoc, updateDoc, DocumentData } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, getDoc, query, where, deleteDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Student, StudentMark, YearData, TermData, Mark } from '@/types';
 
@@ -27,16 +27,6 @@ export async function updateStudent(id: string, data: Partial<Student>) {
 export const deleteStudent = async (id: string): Promise<void> => {
   await deleteDoc(doc(db, 'students', id));
 };
-
-/* export const getStudents = async (className: string): Promise<Student[]> => {
-  if (!className) {
-    console.warn('No class name provided to getStudents function');
-    return [];
-  }
-  const q = query(collection(db, 'students'), where('class', '==', className) );
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
-}; */
 
 export const getStudents = async (className: string): Promise<Student[]> => {
   if (!className) {
@@ -78,26 +68,48 @@ export async function getStudentByName(name: string) {
   }
 }
 
-export async function addMark(studentId: string, year: string, term: string, markData: any) {
-  if (!studentId) {
-    throw new Error('Student ID is required for adding marks');
-  }
+// Define a new interface specifically for the addMark function
+interface AddMarkData {
+  subjects: { [key: string]: number };
+  total: number;
+  average: number;
+  status: string;
+}
 
+export async function addMark(studentId: string, year: string, term: string, markData: AddMarkData) {
   try {
-    // Create a reference to the year document
-    const yearRef = doc(db, 'marks', studentId, year, term);
+    const markRef = doc(db, 'marks', studentId, year, term);
+    
+    // Calculate rank (you may want to implement a more sophisticated ranking system)
+    const rank = 0; // placeholder, implement actual ranking logic
 
-    // Use setDoc with merge: true to ensure the year document exists
-    await setDoc(yearRef, {}, { merge: true });
+    const fullMarkData: Mark = {
+      ...markData,
+      rank
+    };
 
-    // Now, set the term data as a field in the year document
-    await updateDoc(yearRef, {
-      [term]: markData
-    });
-
-    console.log(`Mark added for student ${studentId}, year ${year}, term ${term}`);
+    await setDoc(markRef, { [term]: fullMarkData }, { merge: true });
   } catch (error) {
     console.error('Error adding mark:', error);
+    throw error;
+  }
+}
+
+export async function updateMark(studentId: string, year: string, term: string, markData: Omit<Mark, 'rank'>) {
+  try {
+    const markRef = doc(db, 'marks', studentId, year, term);
+    
+    // Calculate rank (you may want to implement a more sophisticated ranking system)
+    const rank = 0; // placeholder, implement actual ranking logic
+
+    const fullMarkData: Mark = {
+      ...markData,
+      rank
+    };
+
+    await updateDoc(markRef, { [term]: fullMarkData });
+  } catch (error) {
+    console.error('Error updating mark:', error);
     throw error;
   }
 }
@@ -137,19 +149,23 @@ export async function getStudentMarks(className: string, year: string, term: str
       const markSnapshot = await getDoc(markRef);
 
       if (markSnapshot.exists()) {
-        const markData = markSnapshot.data() as Mark;
+        const markData = markSnapshot.data() as { [key: string]: Mark };
+        const termData = markData[term];
 
-        // Construct the StudentMark object
-        const studentMark: StudentMark = {
-          id: studentId,
-          name: studentName,
-          subjects: markData.subjects,
-          average: markData.average,
-          rank: markData.rank,
-          status: markData.status
-        };
+        if (termData) {
+          // Construct the StudentMark object
+          const studentMark: StudentMark = {
+            id: studentId,
+            name: studentName,
+            subjects: termData.subjects,
+            average: termData.average,
+            rank: termData.rank,
+            status: termData.status,
+            total: termData.total
+          };
 
-        studentMarks.push(studentMark);
+          studentMarks.push(studentMark);
+        }
       }
     }
 
@@ -163,92 +179,75 @@ export async function getStudentMarks(className: string, year: string, term: str
   }
 }
 
+export async function addStudentMarks(
+  studentName: string,
+  className: string,
+  year: string,
+  term: string,
+  subjects: { [key: string]: number }
+) {
+  try {
+    const studentsRef = collection(db, 'students');
+    const studentQuery = query(studentsRef, where('name', '==', studentName), where('class', '==', className));
+    const studentSnapshot = await getDocs(studentQuery);
+
+    if (studentSnapshot.empty) {
+      throw new Error('Student not found');
+    }
+
+    const studentId = studentSnapshot.docs[0].id;
+    const total = Object.values(subjects).reduce((sum, mark) => sum + mark, 0);
+    const average = total / Object.keys(subjects).length;
+
+    const markData: Mark = {
+      subjects,
+      total,
+      average,
+      rank: 0, // You may want to implement a ranking system
+      status: average >= 50 ? 'PASS' : 'FAIL'
+    };
+
+    const markRef = doc(db, 'marks', studentId, year, term);
+    await setDoc(markRef, { [term]: markData }, { merge: true });
+
+    return studentId;
+  } catch (error) {
+    console.error('Error adding student marks:', error);
+    throw error;
+  }
+}
+
+export async function updateStudentMarks(
+  studentId: string,
+  className: string,
+  year: string,
+  term: string,
+  subjects: { [key: string]: number }
+) {
+  try {
+    
+    const total = Object.values(subjects).reduce((sum, mark) => sum + mark, 0);
+    const average = total / Object.keys(subjects).length;
+
+    const markData: Mark = {
+      subjects,
+      total,
+      average,
+      rank: 0, // You may want to implement a ranking system
+      status: average >= 50 ? 'PASS' : 'FAIL'
+    };
+
+    const markRef = doc(db, 'marks', studentId, year, term);
+    await updateDoc(markRef, { [term]: markData });
+  } catch (error) {
+    console.error('Error updating student marks:', error);
+    throw error;
+  }
+}
+
 export const uploadImage = async (file: File, path: string): Promise<string> => {
   const storageRef = ref(storage, path);
   await uploadBytes(storageRef, file);
   const downloadURL = await getDownloadURL(storageRef);
   return downloadURL;
 };
-
-/* export const getMarks = async (studentId: string): Promise<YearData> => {
-  const marksRef = doc(db, 'marks', studentId);
-  const yearData: YearData = {};
-
-  console.log("marksRef: ", marksRef)
-
-  const yearCollections = await getDocs(collection(marksRef, "year"));
-
-  for (const yearDoc of yearCollections.docs) {
-    const year = yearDoc.id;
-    const termCollections = await getDocs(collection(marksRef, year));
-    
-    console.log("Term collection: ", termCollections)
-    yearData[year] = {};
-    
-    for (const termDoc of termCollections.docs) {
-      const term = termDoc.id;
-      yearData[year][term] = termDoc.data() as Mark;
-    }
-  }
-  
-  return yearData;
-}; */
-
-/* export const getMarks = async (studentId: string, year: string): Promise<YearData> => {
-  const marksRef = doc(db, 'marks', studentId, year); // Reference to the specific year document
-  const marksSnapshot = await getDoc(marksRef);
-
-  if (!marksSnapshot.exists()) {
-    throw new Error("No marks found for the specified year.");
-  }
-
-  return marksSnapshot.data() as YearData; // Return the data cast to YearData type
-}; */
-
-/* // lib/firebaseUtils.ts
-import { db } from './firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore';
-import { Student, Mark } from '../types';
-
-export const addStudent = async (student: Omit<Student, 'id'>): Promise<string> => {
-  const docRef = await addDoc(collection(db, 'students'), student);
-  return docRef.id;
-};
-
-export const updateStudent = async (id: string, data: Partial<Student>): Promise<void> => {
-  await updateDoc(doc(db, 'students', id), data);
-};
-
-export const deleteStudent = async (id: string): Promise<void> => {
-  await deleteDoc(doc(db, 'students', id));
-};
-
-export const getStudents = async (): Promise<Student[]> => {
-  const querySnapshot = await getDocs(collection(db, 'students'));
-  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
-};
-
-export const addMark = async (mark: Mark): Promise<string> => {
-  const docRef = await addDoc(collection(db, 'marks'), mark);
-  return docRef.id;
-};
-
-export const getMarks = async (studentId: string, term: number): Promise<Mark | null> => {
-  const q = query(collection(db, 'marks'), where('studentId', '==', studentId), where('term', '==', term));
-  const querySnapshot = await getDocs(q);
-  if (querySnapshot.empty) return null;
-  return { studentId: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() } as Mark;
-};
-
-export const getClassMarks = async (className: string, term: number): Promise<Mark[]> => {
-  const q = query(collection(db, 'marks'), where('class', '==', className), where('term', '==', term));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => ({ studentId: doc.id, ...doc.data() } as Mark));
-};
-
-export const uploadImage = async (file: File, path: string): Promise<string> => {
-  // Implement image upload logic here
-  // This is a placeholder function, you'll need to implement the actual upload logic
-  console.log('Uploading image:', file, 'to path:', path);
-  return 'https://example.com/uploaded-image-url.jpg';
-}; */

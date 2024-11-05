@@ -12,6 +12,15 @@ export interface StudentMark {
   average: number;
   rank: number;
   status: string;
+  total: number;
+}
+
+export interface Mark {
+  average: number;
+  rank: number;
+  status: string;
+  subjects: { [key: string]: number };
+  total: number;
 }
 
 export interface Class {
@@ -27,13 +36,13 @@ export interface Student {
   photo?: string;
 }
 
-export interface Mark {
+/* export interface Mark {
   subjects: { [subjectCode: string]: number };
   total: number;
   average: number;
   rank: number;
   status: string;
-}
+} */
 
 export interface TermData {
   [term: string]: Mark;
