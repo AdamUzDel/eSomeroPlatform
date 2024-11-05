@@ -1,7 +1,6 @@
-// app/dashboard/layout.tsx
 "use client"
 
-import { useState/* , useEffect */ } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from "@/components/ui/button"
@@ -25,13 +24,15 @@ import {
   X,
   Bell,
   LogOut,
-  Eye
+  Eye,
+  BookOpen
 } from 'lucide-react'
 import { AccessibilityPanel } from '@/components/AccessibilityPanel'
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Students', href: '/dashboard/students', icon: Users },
+  { name: 'Marks', href: '/dashboard/marks', icon: BookOpen },
   { name: 'Report Cards', href: '/dashboard/report-cards', icon: FileText },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]

@@ -5,6 +5,15 @@ export interface Subject {
   code: string;
 }
 
+export interface StudentMark {
+  id: string;
+  name: string;
+  subjects: { [key: string]: number };
+  average: number;
+  rank: number;
+  status: string;
+}
+
 export interface Class {
   name: string;
   subjects: Subject[];
