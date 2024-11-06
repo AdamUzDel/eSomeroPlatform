@@ -1,5 +1,5 @@
 // app/dashboard/report-card/page.tsx
-"use client"
+//"use client"
 
 
 export default function ReportCardPage() {

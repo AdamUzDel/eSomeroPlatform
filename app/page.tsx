@@ -12,7 +12,7 @@ export default function WelcomePage() {
       </p>
       <div className="space-y-4 md:space-y-0 md:space-x-4 flex flex-col md:flex-row">
         <Button asChild size="lg">
-          <Link href="/dashboard">Enter Dashboard</Link>
+          <Link href="/dashboard">Enter School Dashboard</Link>
         </Button>
         <Button asChild variant="outline" size="lg">
           <Link href="https://bytebasetech.com">Learn More</Link>

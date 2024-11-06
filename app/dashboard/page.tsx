@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Bell, ChevronRight } from "lucide-react"
+import Link from 'next/link'
 
 export default function DashboardPage() {
   // Mock data (replace with actual data fetching logic later)
@@ -12,9 +13,9 @@ export default function DashboardPage() {
   ]
 
   const studentPerformance = [
-    { id: 1, name: "Alice Johnson", class: "Class 7", average: 85 },
-    { id: 2, name: "Bob Smith", class: "Class 8", average: 78 },
-    { id: 3, name: "Charlie Brown", class: "Class 6", average: 92 },
+    { id: 1, name: "Alice Barnaba", class: "PREP A", average: 85 },
+    { id: 2, name: "Mathew Remigio", class: "S3A", average: 78 },
+    { id: 3, name: "Adam Musa", class: "S2B", average: 92 },
   ]
 
   return (
@@ -64,10 +65,12 @@ export default function DashboardPage() {
                 </li>
               ))}
             </ul>
-            <Button variant="link" className="mt-4">
-              View all students
-              <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
+            <Link href={"/dashboard/students"}>
+              <Button variant="link" className="mt-4">
+                View all students
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>

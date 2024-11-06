@@ -6,27 +6,9 @@ import { usePathname } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
-  Settings, 
-  Menu,
-  X,
-  Bell,
-  LogOut,
-  Eye,
-  BookOpen
-} from 'lucide-react'
+import { LayoutDashboard, Users, FileText, Settings, Menu, X, Bell, LogOut, Eye, BookOpen } from 'lucide-react'
 import { AccessibilityPanel } from '@/components/AccessibilityPanel'
 
 const navItems = [
@@ -44,10 +26,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Mock user data (replace with actual auth logic later)
   const user = {
-    name: 'Root',
-    email: 'root@example.com',
+    name: 'Loyola SS - Wau',
+    email: 'loyolass@gmail.com',
     role: 'Administrator',
-    avatar: '/placeholder-avatar.jpg'
+    avatar: '/LoyolaLogoOrig.png'
   }
 
   return (
