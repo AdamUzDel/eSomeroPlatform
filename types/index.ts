@@ -152,6 +152,10 @@ export const classes: Class[] = [
     subjects: s1Subjects
   },
   {
+    name: "S2C",
+    subjects: s1Subjects
+  },
+  {
     name: "S3A",
     subjects: s3S4ScienceSubjects
   },

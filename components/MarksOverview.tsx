@@ -140,26 +140,26 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Rank</TableHead>
                       <TableHead>Student</TableHead>
                       {subjects.map((subject) => (
                         <TableHead key={subject}>{subject}</TableHead>
                       ))}
                       <TableHead>Total</TableHead>
                       <TableHead>Average</TableHead>
-                      <TableHead>Rank</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {marks.map((student) => (
                       <TableRow key={student.id} className="cursor-pointer hover:bg-gray-100" /* onClick={() => router.push(`/dashboard/students/${student.id}`)} */>
+                      <TableCell>{student.rank ?? 'N/A'}</TableCell>
                         <TableCell>{student.name}</TableCell>
                         {subjects.map((subject) => (
                           <TableCell key={subject}>{student.subjects[subject] != null ? Math.round(student.subjects[subject]) : 'N/A'}</TableCell>
                         ))}
                         <TableCell>{student.total != null ? Math.round(student.total) : 'N/A'}</TableCell>
                         <TableCell>{student.average?.toFixed(2) ?? 'N/A'}</TableCell>
-                        <TableCell>{student.rank ?? 'N/A'}</TableCell>
                         <TableCell>{student.status ?? 'N/A'}</TableCell>
                         <TableCell>
                         <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/marks/edit/${student.id}`)}>

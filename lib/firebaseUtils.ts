@@ -74,14 +74,15 @@ interface AddMarkData {
   total: number;
   average: number;
   status: string;
+  rank?: number; // Make rank optional in the input data
 }
 
 export async function addMark(studentId: string, year: string, term: string, markData: AddMarkData) {
   try {
     const markRef = doc(db, 'marks', studentId, year, term);
     
-    // Calculate rank (you may want to implement a more sophisticated ranking system)
-    const rank = 0; // placeholder, implement actual ranking logic
+    // Use the existing rank if provided, otherwise default to 0
+    const rank = markData.rank !== undefined ? markData.rank : 0;
 
     const fullMarkData: Mark = {
       ...markData,
