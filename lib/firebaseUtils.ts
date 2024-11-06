@@ -68,6 +68,24 @@ export async function getStudentByName(name: string) {
   }
 }
 
+export async function getStudentsByClass(className: string): Promise<Student[]> {
+  try {
+    const studentsRef = collection(db, 'students');
+    const q = query(studentsRef, where('class', '==', className));
+    const querySnapshot = await getDocs(q);
+    
+    const students: Student[] = [];
+    querySnapshot.forEach((doc) => {
+      students.push({ id: doc.id, ...doc.data() } as Student);
+    });
+    
+    return students.sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error) {
+    console.error('Error getting students by class:', error);
+    throw error;
+  }
+}
+
 // Define a new interface specifically for the addMark function
 interface AddMarkData {
   subjects: { [key: string]: number };

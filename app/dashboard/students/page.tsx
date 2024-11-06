@@ -217,7 +217,7 @@ export default function StudentsPage() {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(student.id); }}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/report-card/${student.id}?class=${student.class}`); }}>View Report Card</DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/report-cards/${student.id}?class=${student.class}`); }}>View Report Card</DropdownMenuItem>
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }}>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
