@@ -23,6 +23,20 @@ export interface Mark {
   total: number;
 }
 
+export interface ReportCardMark {
+  id: string;
+  class: string;
+  year: string;
+  term: string;
+  average: number;
+  rank: number;
+  status: string;
+  subjects: {
+    [subject: string]: number;
+  };
+  total: number;
+}
+
 export interface Class {
   name: string;
   subjects: Subject[];

@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
-import { getStudentById, getStudentMarks } from '@/lib/firebaseUtils'
-import { Student, Mark, terms } from '@/types'
+import { getStudentById, getStudentMarksForAllTerms } from '@/lib/firebaseUtils'
+import { Student, ReportCardMark } from '@/types'
 import { Button } from "@/components/ui/button"
 import { Printer } from 'lucide-react'
 import { Oswald } from 'next/font/google'
@@ -15,9 +15,22 @@ const oswald = Oswald({
   display: 'swap',
 })
 
-interface TermData {
-  term: string;
-  marks: Mark;
+// Create a cache object
+const cache: { [key: string]: { data: any; timestamp: number } } = {}
+
+// Cache expiration time (e.g., 5 minutes)
+const CACHE_EXPIRATION = 5 * 60 * 1000
+
+function getCachedData(key: string) {
+  const cachedItem = cache[key]
+  if (cachedItem && Date.now() - cachedItem.timestamp < CACHE_EXPIRATION) {
+    return cachedItem.data
+  }
+  return null
+}
+
+function setCachedData(key: string, data: any) {
+  cache[key] = { data, timestamp: Date.now() }
 }
 
 export default function ReportCardPreview() {
@@ -25,8 +38,9 @@ export default function ReportCardPreview() {
   const searchParams = useSearchParams()
   const [student, setStudent] = useState<Student | null>(null)
   const [selectedYear, setSelectedYear] = useState('2024')
-  const [termsData, setTermsData] = useState<TermData[]>([])
+  const [termsData, setTermsData] = useState<ReportCardMark[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (params.id && searchParams.get('year')) {
@@ -36,24 +50,44 @@ export default function ReportCardPreview() {
   }, [params.id, selectedYear])
 
   const fetchStudentData = async () => {
+    setIsLoading(true)
+    setError(null)
     try {
-      const studentData = await getStudentById(params.id as string)
-      setStudent(studentData)
-      
-      const allTermsData: TermData[] = []
-      for (const term of terms) {
-        const marks = await getStudentMarks(studentData.class, selectedYear, term)
-        const studentMark = marks.find(m => m.id === params.id)
-        if (studentMark && Object.keys(studentMark.subjects).length > 0) {
-          allTermsData.push({
-            term,
-            marks: studentMark
-          })
+      console.log('Fetching student data...')
+      const cacheKey = `student_${params.id}_${selectedYear}`
+      let studentData = getCachedData(cacheKey)
+
+      if (!studentData) {
+        console.log('Data not in cache, fetching from database...')
+        const fetchedStudent = await getStudentById(params.id as string)
+        if (!fetchedStudent) {
+          throw new Error('Student not found')
         }
+        console.log('Fetched student:', fetchedStudent)
+
+        const fetchedMarks = await getStudentMarksForAllTerms(fetchedStudent.class, selectedYear, params.id as string)
+        console.log('Fetched marks:', fetchedMarks)
+
+        studentData = {
+          student: fetchedStudent,
+          marks: fetchedMarks
+        }
+
+        setCachedData(cacheKey, studentData)
+      } else {
+        console.log('Data found in cache')
       }
-      setTermsData(allTermsData)
+
+      setStudent(studentData.student)
+      setTermsData(studentData.marks)
+
+      if (studentData.marks.length === 0) {
+        console.log(`No data found for the year ${selectedYear}`)
+        setError(`No data found for the year ${selectedYear}`)
+      }
     } catch (error) {
       console.error('Error fetching student data:', error)
+      setError('Failed to fetch student data. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -78,13 +112,25 @@ export default function ReportCardPreview() {
     return 'E'
   }
 
+  const calculateMeanScore = (termsData: ReportCardMark[]): number => {
+    const sum = termsData.reduce((acc, term) => acc + term.average, 0)
+    return sum / termsData.length
+  }
+
   if (isLoading) {
     return <div>Loading...</div>
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>
   }
 
   if (!student) {
     return <div>Student not found</div>
   }
+
+  const meanScore = calculateMeanScore(termsData)
+  const meanGrade = getGrade(meanScore)
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
@@ -167,16 +213,16 @@ export default function ReportCardPreview() {
             </tr>
           </thead>
           <tbody className="font-['Times_New_Roman']">
-            {Object.entries(termsData[0]?.marks.subjects || {}).map(([subject], index) => (
+            {Object.entries(termsData[0]?.subjects || {}).map(([subject], index) => (
               <tr key={subject}>
                 <td className="border px-2 py-1">{index + 1}. {subject}</td>
                 {termsData.map((termData) => (
                   <React.Fragment key={termData.term}>
                     <td className="border px-2 py-1 text-center">
-                      {Math.round(termData.marks.subjects[subject])}
+                      {Math.round(termData.subjects[subject])}
                     </td>
                     <td className="border px-2 py-1 text-center">
-                      {getGrade(termData.marks.subjects[subject])}
+                      {getGrade(termData.subjects[subject])}
                     </td>
                   </React.Fragment>
                 ))}
@@ -186,7 +232,7 @@ export default function ReportCardPreview() {
               <td className="border px-2 py-1">TOTAL</td>
               {termsData.map((termData) => (
                 <td key={termData.term} className="border px-2 py-1 text-center" colSpan={2}>
-                  {Math.round(termData.marks.total)}
+                  {Math.round(termData.total)}
                 </td>
               ))}
             </tr>
@@ -195,10 +241,10 @@ export default function ReportCardPreview() {
               {termsData.map((termData) => (
                 <React.Fragment key={termData.term}>
                   <td className="border px-2 py-1 text-center">
-                    {termData.marks.average.toFixed(1)}
+                    {termData.average.toFixed(1)}
                   </td>
                   <td className="border px-2 py-1 text-center">
-                    {getGrade(termData.marks.average)}
+                    {getGrade(termData.average)}
                   </td>
                 </React.Fragment>
               ))}
@@ -246,13 +292,12 @@ export default function ReportCardPreview() {
         {/* Footer Information */}
         <div className="space-y-4 text-sm">
           <div className="grid grid-cols-3 gap-4">
-            <p><span className="font-semibold">Mean Score:</span> {termsData[termsData.length - 1]?.marks.average.toFixed(1) || 'N/A'}</p>
-            <p><span className="font-semibold">Mean Grade:</span> {termsData[termsData.length - 1]?.marks ? getGrade(termsData[termsData.length - 1].marks.average) : 'N/A'}</p>
-            <p><span className="font-semibold">Position:</span></p>
+            <p><span className="font-semibold">Mean Score:</span> {meanScore.toFixed(1)}</p>
+            <p><span className="font-semibold">Mean Grade:</span> {meanGrade}</p>
+            <p><span className="font-semibold">Position:</span> {termsData[termsData.length - 1]?.rank || 'N/A'}</p>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <p><span className="font-semibold">Promoted to Senior:</span></p>
-            <p><span className="font-semibold">Retained in Senior:</span></p>
+            <p><span className="font-semibold">Status:</span> {termsData[termsData.length - 1]?.status || 'N/A'}</p>
           </div>
           <div className="space-y-2">
             <p className="font-semibold">Academic Dean&apos;s Remarks:</p>

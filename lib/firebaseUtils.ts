@@ -2,7 +2,7 @@
 import { db, storage } from './firebase';
 import { collection, doc, setDoc, getDocs, getDoc, query, where, deleteDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Student, StudentMark, YearData, TermData, Mark } from '@/types';
+import { Student, StudentMark, YearData, TermData, Mark, ReportCardMark } from '@/types';
 
 export const addStudent = async (student: Omit<Student, 'id'>): Promise<string> => {
   const docRef = doc(collection(db, 'students'));
@@ -196,6 +196,58 @@ export async function getStudentMarks(className: string, year: string, term: str
     console.error('Error getting student marks:', error);
     throw error;
   }
+}
+
+export async function getStudentMarksForAllTerms(studentClass: string, year: string, studentId: string): Promise<ReportCardMark[]> {
+  console.log(`Fetching marks for student ${studentId}, class ${studentClass}, year ${year}`)
+  
+  const studentMarksRef = collection(db, "marks", studentId, year)
+  console.log('Collection reference:', studentMarksRef.path)
+  
+  const studentMarksDocs = await getDocs(studentMarksRef)
+
+  if (studentMarksDocs.empty) {
+    console.log(`No documents found in collection: ${studentMarksRef.path}`)
+    return []
+  }
+
+  const termsData: ReportCardMark[] = []
+
+  studentMarksDocs.forEach((doc) => {
+    console.log(`Document ${doc.id} data:`, doc.data())
+    const docData = doc.data()
+    
+    // Iterate through Term 1, Term 2, Term 3
+    for (const termKey in docData) {
+      if (docData.hasOwnProperty(termKey) && termKey.startsWith('Term')) {
+        const termData = docData[termKey] as ReportCardMark
+        console.log(`${termKey} data:`, termData)
+        
+        termsData.push({
+          id: `${studentId}-${year}-${termKey}`,
+          class: studentClass,
+          year: year,
+          term: termKey,
+          average: termData.average || 0,
+          rank: termData.rank || 0,
+          status: termData.status || '',
+          subjects: termData.subjects || {},
+          total: termData.total || 0
+        })
+      }
+    }
+  })
+
+  console.log('Processed results:', termsData)
+
+  // Sort the terms data by term number
+  termsData.sort((a, b) => {
+    const termNumberA = parseInt(a.term.split(' ')[1])
+    const termNumberB = parseInt(b.term.split(' ')[1])
+    return termNumberA - termNumberB
+  })
+
+  return termsData
 }
 
 export async function addStudentMarks(
