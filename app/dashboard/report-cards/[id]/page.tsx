@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { getStudentById, getStudentMarksForAllTerms } from '@/lib/firebaseUtils'
@@ -15,13 +15,19 @@ const oswald = Oswald({
   display: 'swap',
 })
 
+// Define a type for the cache item
+type CacheItem = {
+  data: unknown;
+  timestamp: number;
+}
+
 // Create a cache object
-const cache: { [key: string]: { data: any; timestamp: number } } = {}
+const cache: { [key: string]: CacheItem } = {}
 
 // Cache expiration time (e.g., 5 minutes)
 const CACHE_EXPIRATION = 5 * 60 * 1000
 
-function getCachedData(key: string) {
+function getCachedData(key: string): unknown {
   const cachedItem = cache[key]
   if (cachedItem && Date.now() - cachedItem.timestamp < CACHE_EXPIRATION) {
     return cachedItem.data
@@ -29,7 +35,7 @@ function getCachedData(key: string) {
   return null
 }
 
-function setCachedData(key: string, data: any) {
+function setCachedData(key: string, data: unknown): void {
   cache[key] = { data, timestamp: Date.now() }
 }
 
@@ -42,20 +48,13 @@ export default function ReportCardPreview() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (params.id && searchParams.get('year')) {
-      setSelectedYear(searchParams.get('year') as string)
-      fetchStudentData()
-    }
-  }, [params.id, selectedYear])
-
-  const fetchStudentData = async () => {
+  const fetchStudentData = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     try {
       console.log('Fetching student data...')
       const cacheKey = `student_${params.id}_${selectedYear}`
-      let studentData = getCachedData(cacheKey)
+      let studentData = getCachedData(cacheKey) as { student: Student; marks: ReportCardMark[] } | null
 
       if (!studentData) {
         console.log('Data not in cache, fetching from database...')
@@ -91,7 +90,14 @@ export default function ReportCardPreview() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [params.id, selectedYear])
+
+  useEffect(() => {
+    if (params.id && searchParams.get('year')) {
+      setSelectedYear(searchParams.get('year') as string)
+      fetchStudentData()
+    }
+  }, [params.id, searchParams, fetchStudentData])
 
   const handlePrint = () => {
     window.print()
