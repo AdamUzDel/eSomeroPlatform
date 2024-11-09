@@ -1,4 +1,3 @@
-//app/dashboard/report-cards/[id]/page.tsx
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
@@ -106,8 +105,6 @@ export default function ReportCardPreview() {
     window.print()
   }
 
-  const reportCardUrl = `https://esomero.bytebasetech.com/report-cards/${params.id}?year=${selectedYear}`
-
   const getGrade = (score: number): string => {
     if (score >= 80) return 'A'
     if (score >= 75) return 'A-'
@@ -142,6 +139,9 @@ export default function ReportCardPreview() {
 
   const meanScore = calculateMeanScore(termsData)
   const meanGrade = getGrade(meanScore)
+
+  // Update the QR code URL to use the new public route
+  const reportCardUrl = `https://esomero.bytebasetech.com/report-cards/${params.id}?year=${selectedYear}`
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 print:p-0 print:bg-white">
@@ -186,7 +186,7 @@ export default function ReportCardPreview() {
         </div>
 
         {/* Student Info */}
-        <div className="flex justify-between items-start mb-4 items-center text-sm relative">
+        <div className="flex justify-between items-start mb-4 items-center text-sm relative pr-4">
           <div className="flex items-start items-center gap-8">
             <div className="flex items-center justify-center">
               {student.photo ? (
@@ -205,12 +205,12 @@ export default function ReportCardPreview() {
               <p><span className="font-semibold">CLASS:</span> {student.class}</p>
             </div>
           </div>
-          <div>
+          <div className="flex flex-col items-end">
             <p><span className="font-semibold">TERM:</span> {termsData.length > 0 ? termsData[termsData.length - 1].term : 'N/A'}</p>
             <p><span className="font-semibold">YEAR:</span> {selectedYear}</p>
-          </div>
-          <div className="mt-2">
-            <QRCodeSVG value={reportCardUrl} size={64} />
+            <div className="mt-2">
+              <QRCodeSVG value={reportCardUrl} size={64} />
+            </div>
           </div>
         </div>
 
@@ -321,9 +321,6 @@ export default function ReportCardPreview() {
             <p><span className="font-semibold">Promoted to:</span> </p>
             <p><span className="font-semibold">Retained in:</span> <span className="border-b border-gray-300 h-4"></span> </p>
           </div>
-          {/* <div className="grid grid-cols-2 gap-4">
-            <p><span className="font-semibold">Status:</span> {//termsData[termsData.length - 1]?.status || 'N/A'}</p>
-          </div> */}
           <div className="space-y-2">
             <p className="font-semibold">Academic Dean&apos;s Remarks:</p>
             <div className="border-b border-gray-300 h-4"></div>
