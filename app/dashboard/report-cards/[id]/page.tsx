@@ -140,7 +140,7 @@ export default function ReportCardPreview() {
   const meanGrade = getGrade(meanScore)
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-gray-100 p-4 print:p-0 print:bg-white">
       <div className="mb-4 print:hidden">
         <Button onClick={handlePrint}>
           <Printer className="mr-2 h-4 w-4" />
@@ -148,16 +148,24 @@ export default function ReportCardPreview() {
         </Button>
       </div>
 
-      <div className="bg-white mx-auto w-[210mm] h-[297mm] p-8 shadow-lg print:shadow-none">
+      {/* Report card section */}
+      <div id="report-card-content" className="bg-white mx-auto w-[210mm] h-[297mm] p-8 shadow-lg print:shadow-none print:w-full print:h-auto relative">
+        {/* Watermark */}
+        <div 
+          className="absolute mx-48 mt-8 inset-0 bg-contain bg-center bg-no-repeat opacity-5 pointer-events-none"
+          style={{ backgroundImage: "url('/LoyolaLogoOrig.png')" }}
+          aria-hidden="true"
+        ></div>
+
         {/* Header */}
-        <div className="text-center ">
+        <div className="text-center relative">
           <div className="flex justify-center items-center mb-4">
             <Image
               src="/LoyolaLogoOrig.png"
               alt="School Logo"
               width={100}
               height={100}
-              className="object-contain "
+              className="object-contain"
             />
             <div className='ml-4'>
               <h1 className={`${oswald.className} text-2xl font-bold mb-1`}>
@@ -165,17 +173,16 @@ export default function ReportCardPreview() {
               </h1>
               <p className="text-sm">Jebel Kheir, P.O. Box 2 - Wau, South Sudan Email: principal.lss@gmail.com</p>
               <p className="text-sm">Phone: +211 916363969</p>
-            <p className={`${oswald.className} font-semibold mt-2`}>EXAMINATIONS OFFICE</p>
+              <p className={`${oswald.className} font-semibold mt-2`}>EXAMINATIONS OFFICE</p>
             </div>
           </div>
           
-          <div className="border-b-4 border-red-500">
-          </div>
+          <div className="border-b-4 border-red-500"></div>
           <p className={`${oswald.className} mt-2 ml-24 font-semibold`}>ACADEMIC PROGRESS REPORT</p>
         </div>
 
         {/* Student Info */}
-        <div className="flex justify-between items-start mb-2 items-center text-sm">
+        <div className="flex justify-between items-start mb-4 items-center text-sm relative pr-4">
           <div className="flex items-start items-center gap-8">
             <div className="flex items-center justify-center">
               {student.photo ? (
@@ -201,10 +208,10 @@ export default function ReportCardPreview() {
         </div>
 
         {/* Marks Table */}
-        <table className="w-full border-collapse mb-2 text-sm">
+        <table className="w-full border-collapse mb-4 text-sm relative">
           <thead>
             <tr>
-              <th className="border px-2 py-1 text-left">SUBJECT</th>
+              <th className="border px-2 py-1 text-left"></th>
               {termsData.map((termData) => (
                 <th key={termData.term} className="border px-2 py-1 text-center" colSpan={2}>
                   {termData.term}<br />OUT OF 100
@@ -212,7 +219,7 @@ export default function ReportCardPreview() {
               ))}
             </tr>
             <tr>
-              <th className="border px-2 py-1"></th>
+                <th className="border px-2 py-1 text-center">SUBJECT</th>
               {termsData.map((termData) => (
                 <React.Fragment key={termData.term}>
                   <th className="border px-2 py-1 text-center">TOTAL SCORE</th>
@@ -238,7 +245,7 @@ export default function ReportCardPreview() {
               </tr>
             ))}
             <tr className="font-semibold">
-              <td className="border px-2 py-1">TOTAL</td>
+              <td className="border px-2 py-1 text-center">TOTAL</td>
               {termsData.map((termData) => (
                 <td key={termData.term} className="border px-2 py-1 text-center" colSpan={2}>
                   {Math.round(termData.total)}
@@ -246,7 +253,7 @@ export default function ReportCardPreview() {
               ))}
             </tr>
             <tr className="font-semibold">
-              <td className="border px-2 py-1">AVERAGE</td>
+              <td className="border px-2 py-1 text-center">AVERAGE</td>
               {termsData.map((termData) => (
                 <React.Fragment key={termData.term}>
                   <td className="border px-2 py-1 text-center">
@@ -262,7 +269,7 @@ export default function ReportCardPreview() {
         </table>
 
         {/* Grading Scale */}
-        <div className="mb-6 text-xs flex items-center">
+        <div className="mb-6 text-xs flex items-center relative">
           <div className="font-semibold mb-2">GRADES</div>
           <table className="w-full border-collapse ml-2 text-center">
             <tbody>
@@ -299,15 +306,17 @@ export default function ReportCardPreview() {
         </div>
 
         {/* Footer Information */}
-        <div className="space-y-4 text-sm">
-          <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-4 text-sm relative">
+          <div className="grid grid-cols-5 gap-2">
             <p><span className="font-semibold">Mean Score:</span> {meanScore.toFixed(1)}</p>
             <p><span className="font-semibold">Mean Grade:</span> {meanGrade}</p>
             <p><span className="font-semibold">Position:</span> {termsData[termsData.length - 1]?.rank || 'N/A'}</p>
+            <p><span className="font-semibold">Promoted to:</span> </p>
+            <p><span className="font-semibold">Retained in:</span> <span className="border-b border-gray-300 h-4"></span> </p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <p><span className="font-semibold">Status:</span> {termsData[termsData.length - 1]?.status || 'N/A'}</p>
-          </div>
+          {/* <div className="grid grid-cols-2 gap-4">
+            <p><span className="font-semibold">Status:</span> {//termsData[termsData.length - 1]?.status || 'N/A'}</p>
+          </div> */}
           <div className="space-y-2">
             <p className="font-semibold">Academic Dean&apos;s Remarks:</p>
             <div className="border-b border-gray-300 h-4"></div>
@@ -318,6 +327,27 @@ export default function ReportCardPreview() {
           </div>
         </div>
       </div>
+
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .print\\:hidden {
+            display: none !important;
+          }
+          #report-card-content, #report-card-content * {
+            visibility: visible;
+          }
+          #report-card-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: auto;
+          }
+        }
+      `}</style>
     </div>
   )
 }

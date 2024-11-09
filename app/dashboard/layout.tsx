@@ -36,7 +36,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-gray-100">
       <div className="flex h-screen bg-gray-100 overflow-hidden">
         {/* Sidebar for mobile */}
-        <div className={`fixed inset-0 z-40 flex md:hidden ${sidebarOpen ? "" : "hidden"}`} role="dialog" aria-modal="true">
+        <div className={`fixed inset-0 z-40 flex md:hidden print:hidden ${sidebarOpen ? "" : "hidden"}`} role="dialog" aria-modal="true">
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75" aria-hidden="true" onClick={() => setSidebarOpen(false)}></div>
           <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
             <div className="absolute top-0 right-0 -mr-12 pt-2">
@@ -56,7 +56,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Static sidebar for desktop */}
-        <div className="hidden md:flex md:flex-shrink-0">
+        <div className="hidden md:flex md:flex-shrink-0 print:hidden">
           <div className="flex flex-col w-64">
             <div className="flex flex-col h-0 flex-1 border-r border-gray-200 bg-white">
               <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
@@ -76,7 +76,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         <div className="flex flex-col w-0 flex-1 overflow-hidden">
-          <div className="relative z-10 flex-shrink-0 flex h-16 bg-gray-50 shadow">
+          <div className="relative z-10 flex-shrink-0 flex h-16 bg-gray-50 shadow print:hidden">
             <Button variant="ghost" size="icon" className="md:hidden px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" onClick={() => setSidebarOpen(true)}>
               <span className="sr-only">Open sidebar</span>
               <Menu className="h-6 w-6" aria-hidden="true" />
