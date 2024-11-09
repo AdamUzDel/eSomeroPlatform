@@ -1,14 +1,14 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getStudents, deleteStudent, addStudent, updateStudent, addMark } from '@/lib/firebaseUtils'
-import { Student, Mark, /* Class, */ classes, ExcelRowData } from '@/types'
+import { Student, Mark, classes, ExcelRowData } from '@/types'
 import * as XLSX from 'xlsx'
 import { toast, Toaster } from 'sonner'
 import { UploadModal } from '@/components/UploadModal'
@@ -17,23 +17,21 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Search, UserPlus, Upload, User, FileSpreadsheet } from 'lucide-react'
 
 export default function StudentsPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [students, setStudents] = useState<Student[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
   const [isUploading, setIsUploading] = useState(false)
-  const [selectedClass, setSelectedClass] = useState('PREP-A')
+  const [selectedClass, setSelectedClass] = useState(searchParams.get('class') || '')
   const [isLoading, setIsLoading] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
-  const router = useRouter()
 
-  useEffect(() => {
-    fetchStudents()
-  }, [selectedClass])
-
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
+    if (!selectedClass) return
     setIsLoading(true)
     try {
       const fetchedStudents = await getStudents(selectedClass)
-      // Sort students by name in ascending order
       const sortedStudents = fetchedStudents.sort((a, b) => a.name.localeCompare(b.name))
       setStudents(sortedStudents)
       toast.success(`Loaded ${sortedStudents.length} students`)
@@ -43,6 +41,23 @@ export default function StudentsPage() {
     } finally {
       setIsLoading(false)
     }
+  }, [selectedClass])
+
+  useEffect(() => {
+    if (selectedClass) {
+      fetchStudents()
+    }
+  }, [selectedClass, fetchStudents])
+
+  useEffect(() => {
+    updateURL()
+  }, [selectedClass, searchTerm])
+
+  const updateURL = () => {
+    const params = new URLSearchParams()
+    if (selectedClass) params.set('class', selectedClass)
+    if (searchTerm) params.set('search', searchTerm)
+    router.push(`/dashboard/students?${params.toString()}`, { scroll: false })
   }
 
   const filteredStudents = students.filter(student =>
@@ -158,12 +173,16 @@ export default function StudentsPage() {
           <UserPlus className="mr-2 h-4 w-4" />
           Add Student
         </Button>
-        <Button onClick={() => router.push('/dashboard/students/upload')} disabled={isUploading} className="flex items-center">
+        <Button  onClick={() => router.push('/dashboard/students/upload')} disabled={isUploading} className="flex items-center">
           <Upload className="mr-2 h-4 w-4" />
           Upload Excel
         </Button>
       </div>
-      {isLoading ? (
+      {!selectedClass ? (
+        <div className="text-center py-10">
+          <p className="text-gray-500">Please select a class to view students.</p>
+        </div>
+      ) : isLoading ? (
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center space-x-4">
@@ -199,7 +218,7 @@ export default function StudentsPage() {
                   <TableCell>{index + 1}</TableCell>
                   <TableCell className="flex items-center space-x-3">
                     <Avatar>
-                      <AvatarImage src={student.photo} alt={student.name} />
+                      <AvatarImage src={student.photo} alt={student.name} className="object-cover" />
                       <AvatarFallback>
                         <User className="h-6 w-6" />
                       </AvatarFallback>

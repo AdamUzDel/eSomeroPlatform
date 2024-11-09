@@ -6,9 +6,10 @@ import Image from 'next/image'
 import { getStudentById, getStudentMarksForAllTerms } from '@/lib/firebaseUtils'
 import { Student, ReportCardMark } from '@/types'
 import { Button } from "@/components/ui/button"
-import { Printer } from 'lucide-react'
+import { Printer, User } from 'lucide-react'
 import { Oswald } from 'next/font/google'
 import React from 'react'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const oswald = Oswald({ 
   subsets: ['latin'],
@@ -149,41 +150,43 @@ export default function ReportCardPreview() {
 
       <div className="bg-white mx-auto w-[210mm] h-[297mm] p-8 shadow-lg print:shadow-none">
         {/* Header */}
-        <div className="text-center mb-6">
+        <div className="text-center ">
           <div className="flex justify-center items-center mb-4">
             <Image
               src="/LoyolaLogoOrig.png"
               alt="School Logo"
               width={100}
               height={100}
-              className="object-contain"
+              className="object-contain "
             />
+            <div className='ml-4'>
+              <h1 className={`${oswald.className} text-2xl font-bold mb-1`}>
+                LOYOLA SECONDARY SCHOOL - WAU
+              </h1>
+              <p className="text-sm">Jebel Kheir, P.O. Box 2 - Wau, South Sudan Email: principal.lss@gmail.com</p>
+              <p className="text-sm">Phone: +211 916363969</p>
+            <p className={`${oswald.className} font-semibold mt-2`}>EXAMINATIONS OFFICE</p>
+            </div>
           </div>
-          <h1 className={`${oswald.className} text-2xl font-bold mb-1`}>
-            LOYOLA SECONDARY SCHOOL - WAU
-          </h1>
-          <p className="text-sm">Jebel Kchir, P.O. Box 2 - Wau, South Sudan Email: principal.lss@gmail.com</p>
-          <p className="text-sm">Phone: +211 916363969</p>
-          <div className="mt-2 border-b-2 border-red-500">
-            <p className={`${oswald.className} font-semibold`}>EXAMINATIONS OFFICE</p>
+          
+          <div className="border-b-4 border-red-500">
           </div>
-          <p className={`${oswald.className} mt-2 font-semibold`}>ACADEMIC PROGRESS REPORT</p>
+          <p className={`${oswald.className} mt-2 ml-24 font-semibold`}>ACADEMIC PROGRESS REPORT</p>
         </div>
 
         {/* Student Info */}
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex items-start gap-4">
-            <div className="w-20 h-20 bg-gray-200 flex items-center justify-center">
+        <div className="flex justify-between items-start mb-2 items-center text-sm">
+          <div className="flex items-start items-center gap-8">
+            <div className="flex items-center justify-center">
               {student.photo ? (
-                <Image
-                  src={student.photo}
-                  alt="Student"
-                  width={80}
-                  height={80}
-                  className="object-cover"
-                />
+                <Avatar className="w-20 h-20">
+                  <AvatarImage src={student.photo} alt={student.name} className="w-20 h-20 object-cover" />
+                  <AvatarFallback>
+                    <User className="h-6 w-6" />
+                  </AvatarFallback>
+                </Avatar>
               ) : (
-                <span>Photo</span>
+                <span className="w-20 h-20 bg-gray-200">Photo</span>
               )}
             </div>
             <div>
@@ -198,7 +201,7 @@ export default function ReportCardPreview() {
         </div>
 
         {/* Marks Table */}
-        <table className="w-full border-collapse mb-6">
+        <table className="w-full border-collapse mb-2 text-sm">
           <thead>
             <tr>
               <th className="border px-2 py-1 text-left">SUBJECT</th>
@@ -259,9 +262,9 @@ export default function ReportCardPreview() {
         </table>
 
         {/* Grading Scale */}
-        <div className="mb-6 text-sm">
+        <div className="mb-6 text-xs flex items-center">
           <div className="font-semibold mb-2">GRADES</div>
-          <table className="w-full border-collapse text-center">
+          <table className="w-full border-collapse ml-2 text-center">
             <tbody>
               <tr>
                 <td className="border px-2 py-1">A</td>
@@ -307,11 +310,11 @@ export default function ReportCardPreview() {
           </div>
           <div className="space-y-2">
             <p className="font-semibold">Academic Dean&apos;s Remarks:</p>
-            <div className="border-b border-gray-300 h-8"></div>
+            <div className="border-b border-gray-300 h-4"></div>
           </div>
           <div className="space-y-2">
             <p className="font-semibold">Principal&apos;s Comments:</p>
-            <div className="border-b border-gray-300 h-8"></div>
+            <div className="border-b border-gray-300 h-4"></div>
           </div>
         </div>
       </div>

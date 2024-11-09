@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -13,20 +13,17 @@ import { classes, Student, years } from '@/types'
 import { Search } from 'lucide-react'
 
 export default function ReportCardsList() {
-  const [selectedClass, setSelectedClass] = useState<string>(classes[0].name)
-  const [selectedYear, setSelectedYear] = useState<string>(years[0])
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const [selectedClass, setSelectedClass] = useState<string>(searchParams.get('class') || '')
+  const [selectedYear, setSelectedYear] = useState<string>(searchParams.get('year') || years[0])
   const [students, setStudents] = useState<Student[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [searchTerm, setSearchTerm] = useState<string>('')
-  const router = useRouter()
+  const [searchTerm, setSearchTerm] = useState<string>(searchParams.get('search') || '')
 
-  useEffect(() => {
-    if (selectedClass) {
-      fetchStudents()
-    }
-  }, [selectedClass])
-
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
+    if (!selectedClass) return
     setIsLoading(true)
     try {
       const fetchedStudents = await getStudentsByClass(selectedClass)
@@ -37,10 +34,42 @@ export default function ReportCardsList() {
     } finally {
       setIsLoading(false)
     }
+  }, [selectedClass])
+
+  useEffect(() => {
+    if (selectedClass) {
+      fetchStudents()
+    }
+  }, [selectedClass, fetchStudents])
+
+  useEffect(() => {
+    updateURL()
+  }, [selectedClass, selectedYear, searchTerm])
+
+  const updateURL = () => {
+    const params = new URLSearchParams()
+    if (selectedClass) params.set('class', selectedClass)
+    if (selectedYear !== years[0]) params.set('year', selectedYear)
+    if (searchTerm) params.set('search', searchTerm)
+    router.push(`/dashboard/report-cards?${params.toString()}`, { scroll: false })
   }
 
   const handleStudentClick = (studentId: string) => {
     router.push(`/dashboard/report-cards/${studentId}?year=${selectedYear}`)
+  }
+
+  const handleClassChange = (value: string) => {
+    setSelectedClass(value)
+    setStudents([])
+    setSearchTerm('')
+  }
+
+  const handleYearChange = (value: string) => {
+    setSelectedYear(value)
+  }
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value)
   }
 
   const filteredStudents = useMemo(() => {
@@ -59,7 +88,7 @@ export default function ReportCardsList() {
       <CardContent>
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
-            <Select value={selectedClass} onValueChange={setSelectedClass}>
+            <Select value={selectedClass} onValueChange={handleClassChange}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Select class" />
               </SelectTrigger>
@@ -69,7 +98,7 @@ export default function ReportCardsList() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <Select value={selectedYear} onValueChange={handleYearChange}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Select year" />
               </SelectTrigger>
@@ -79,20 +108,22 @@ export default function ReportCardsList() {
                 ))}
               </SelectContent>
             </Select>
-            {students.length > 0 && (
-              <div className="relative w-full sm:w-[300px]">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search students..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-            )}
+            <div className="relative w-full sm:w-[300px]">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search students..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="pl-8"
+              />
+            </div>
           </div>
 
-          {isLoading ? (
+          {!selectedClass ? (
+            <div className="text-center py-10">
+              <p className="text-gray-500">Please select a class to view students.</p>
+            </div>
+          ) : isLoading ? (
             <div className="space-y-2">
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-full" />

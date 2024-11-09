@@ -67,7 +67,7 @@ export default function EditStudentForm() {
 
       await updateStudent(stdId, { ...student, photo: photoUrl })
       toast.success('Student updated successfully')
-      router.push(`/dashboard/students/${stdId}`)
+      //router.push(`/dashboard/students/${stdId}`)
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
       toast.error(`Failed to update student: ${errorMessage}`)
