@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
+import Head from 'next/head'
 import { getStudentById, getStudentMarksForAllTerms } from '@/lib/firebaseUtils'
 import { Student, ReportCardMark } from '@/types'
 import { Button } from "@/components/ui/button"
@@ -50,6 +51,7 @@ export default function ReportCardPreview() {
   const [termsData, setTermsData] = useState<ReportCardMark[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [pageTitle, setPageTitle] = useState('Report Card')
 
   const fetchStudentData = useCallback(async () => {
     setIsLoading(true)
@@ -82,6 +84,7 @@ export default function ReportCardPreview() {
 
       setStudent(studentData.student)
       setTermsData(studentData.marks)
+      setPageTitle(`${studentData.student.name} - LSS Report Card`)
 
       if (studentData.marks.length === 0) {
         console.log(`No data found for the year ${selectedYear}`)
@@ -101,6 +104,11 @@ export default function ReportCardPreview() {
       fetchStudentData()
     }
   }, [params.id, searchParams, fetchStudentData])
+
+  useEffect(() => {
+    // Update the document title
+    document.title = pageTitle
+  }, [pageTitle])
 
   const handlePrint = () => {
     window.print()
@@ -145,6 +153,9 @@ export default function ReportCardPreview() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 print:p-0 print:bg-white">
+      <Head>
+        <title>{pageTitle}</title>
+      </Head>
       <div className="mb-4 print:hidden">
         <Button onClick={handlePrint}>
           <Printer className="mr-2 h-4 w-4" />
@@ -163,7 +174,7 @@ export default function ReportCardPreview() {
 
         {/* Header */}
         <div className="text-center relative">
-          <div className="flex justify-center items-center mb-4">
+          <div className="flex justify-center items-center mb-2">
             <Image
               src="/LoyolaLogoOrig.png"
               alt="School Logo"
@@ -175,7 +186,7 @@ export default function ReportCardPreview() {
               <h1 className={`${oswald.className} text-2xl font-bold mb-1`}>
                 LOYOLA SECONDARY SCHOOL - WAU
               </h1>
-              <p className="text-sm">Jebel Kheir, P.O. Box 2 - Wau, South Sudan Email: principal.lss@gmail.com</p>
+              <p className="text-sm">Jebel Kheir, P.O. Box 2 - Wau, South Sudan Email: principal.lss@jesuit.net</p>
               <p className="text-sm">Phone: +211 916363969</p>
               <p className={`${oswald.className} font-semibold mt-2`}>EXAMINATIONS OFFICE</p>
             </div>
@@ -189,16 +200,14 @@ export default function ReportCardPreview() {
         <div className="flex justify-between items-start mb-4 items-center text-sm relative">
           <div className="flex items-start items-center gap-8">
             <div className="flex items-center justify-center">
+            <Avatar className="w-20 h-20">
               {student.photo ? (
-                <Avatar className="w-20 h-20">
-                  <AvatarImage src={student.photo} alt={student.name} className="w-20 h-20 object-cover" />
-                  <AvatarFallback>
-                    <User className="h-6 w-6" />
-                  </AvatarFallback>
-                </Avatar>
-              ) : (
-                <span className="w-20 h-20 bg-gray-200">Photo</span>
-              )}
+                <AvatarImage src={student.photo} alt={student.name} className="object-cover" />
+              ) : null}
+              <AvatarFallback className="bg-gray-200">
+                <User className="h-10 w-10 text-gray-400" />
+              </AvatarFallback>
+            </Avatar>
             </div>
             <div>
               <p><span className="font-semibold">NAME:</span> {student.name}</p>
@@ -209,7 +218,7 @@ export default function ReportCardPreview() {
             <p><span className="font-semibold">TERM:</span> {termsData.length > 0 ? termsData[termsData.length - 1].term : 'N/A'}</p>
             <p><span className="font-semibold">YEAR:</span> {selectedYear}</p>
           </div>
-          <div className="mt-2">
+          <div className="">
             <QRCodeSVG value={reportCardUrl} size={64} />
           </div>
         </div>

@@ -10,6 +10,8 @@ import { getStudentsByClass } from '@/lib/firebaseUtils'
 import { toast } from 'sonner'
 import { classes, Student, years } from '@/types'
 import { Search } from 'lucide-react'
+import { /* FileSpreadsheet, */ Printer } from 'lucide-react'
+import { Button } from "@/components/ui/button"
 
 export default function ReportCardsContent() {
   const router = useRouter()
@@ -78,6 +80,12 @@ export default function ReportCardsContent() {
     )
   }, [students, searchTerm])
 
+  const handleGenerateReportCards = () => {
+    if (selectedClass && selectedYear) {
+      router.push(`/dashboard/report-cards/batch-generate?class=${selectedClass}&year=${selectedYear}`)
+    }
+  }
+
   return (
     <CardContent>
       <div className="space-y-4">
@@ -110,6 +118,12 @@ export default function ReportCardsContent() {
               onChange={handleSearchChange}
               className="pl-8"
             />
+          </div>
+          <div className="flex justify-end space-x-2 mb-6">
+            <Button onClick={handleGenerateReportCards} disabled={!selectedClass || !selectedYear} className="flex items-center">
+              <Printer className="mr-2 h-4 w-4" />
+              Generate Class Report Cards
+            </Button>
           </div>
         </div>
 
