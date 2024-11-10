@@ -42,6 +42,7 @@ export default function BatchGenerateReportCardsContent() {
       setStudents(fetchedStudents)
     } catch (error) {
       setError('Failed to fetch students. Please try again.')
+      console.error(`Error fetching students:`, error)
     }
   }, [className])
 
