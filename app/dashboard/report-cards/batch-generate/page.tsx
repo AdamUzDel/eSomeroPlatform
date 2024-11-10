@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { getStudentsByClass, getStudentMarksForAllTerms } from '@/lib/firebaseUtils'
-import { Student, ReportCardMark } from '@/types'
+import { Student } from '@/types'
 import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
 import { ReportCardTemplate } from '@/components/ReportCardTemplate'
@@ -33,7 +33,8 @@ export default function BatchGenerateReportCards() {
       const fetchedStudents = await getStudentsByClass(className)
       setStudents(fetchedStudents)
     } catch (error) {
-      setError('Failed to fetch students. Please try again.')
+      console.error('Error fetching students:', error)
+      setError('Failed to fetch students. Please try again. Error: ' + error)
     }
   }, [className])
 
