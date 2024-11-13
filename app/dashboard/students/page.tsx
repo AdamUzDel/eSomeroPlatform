@@ -1,12 +1,22 @@
 import { Suspense } from 'react'
 import StudentsContent from './StudentsContent'
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function StudentsPage() {
   return (
-    <Suspense fallback={<StudentsPageSkeleton />}>
-      <StudentsContent />
-    </Suspense>
+    <Card className="w-full">
+      <CardHeader>
+        <h1 className="text-3xl font-bold ">Student Data</h1>
+        <CardTitle className='hidden'>
+          Student Data
+        </CardTitle>
+        <CardDescription>Select a class to view student data</CardDescription>
+      </CardHeader>
+        <Suspense fallback={<StudentsPageSkeleton />}>
+          <StudentsContent />
+        </Suspense>
+    </Card>
   )
 }
 

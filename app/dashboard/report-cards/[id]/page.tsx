@@ -1,4 +1,4 @@
-//app/dashboard/report-cards/[id]/page.tsx
+// app/dashboard/report-cards/[id]/page.tsx
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'

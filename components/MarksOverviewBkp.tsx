@@ -1,6 +1,11 @@
-"use client"
+export function MarksOverviewBkp(){
+    return(
+        <h1>Marks Overview</h1>
+    )
+}
+/* "use client"
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -24,79 +29,40 @@ interface MarksOverviewProps {
   terms: string[];
 }
 
-// Define a type for the cache item
-type CacheItem = {
-  data: StudentMark[];
-  timestamp: number;
-}
-
-// Create a cache object
-const cache: { [key: string]: CacheItem } = {}
-
-// Cache expiration time (e.g., 5 minutes)
-const CACHE_EXPIRATION = 5 * 60 * 1000
-
-function getCachedData(key: string): StudentMark[] | null {
-  const cachedItem = cache[key]
-  if (cachedItem && Date.now() - cachedItem.timestamp < CACHE_EXPIRATION) {
-    return cachedItem.data
-  }
-  return null
-}
-
-function setCachedData(key: string, data: StudentMark[]): void {
-  cache[key] = { data, timestamp: Date.now() }
-}
-
 export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
   const [selectedClass, setSelectedClass] = useState<string>(classes[0]?.name || '')
   const [selectedYear, setSelectedYear] = useState<string>(years[0] || '')
   const [selectedTerm, setSelectedTerm] = useState<string>(terms[0] || '')
   const [marks, setMarks] = useState<StudentMark[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [subjects, setSubjects] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
   const router = useRouter()
 
-  const fetchMarks = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const cacheKey = `marks_${selectedClass}_${selectedYear}_${selectedTerm}`
-      let cachedMarks = getCachedData(cacheKey)
-
-      if (!cachedMarks) {
-        console.log('Data not in cache, fetching from database...')
-        cachedMarks = await getStudentMarks(selectedClass, selectedYear, selectedTerm)
-        setCachedData(cacheKey, cachedMarks)
-      } else {
-        console.log('Data found in cache')
-      }
-
-      setMarks(cachedMarks)
-
-      if (cachedMarks.length === 0) {
-        console.log(`No data found for the selected filters`)
-        setError(`No data found for the selected filters`)
-      }
-    } catch (error) {
-      console.error('Error fetching marks:', error)
-      setError('Failed to fetch marks. Please try again.')
-      toast.error('Failed to fetch marks. Please try again.')
-    } finally {
-      setIsLoading(false)
+  useEffect(() => {
+    if (selectedClass && selectedYear && selectedTerm) {
+      fetchMarks()
     }
   }, [selectedClass, selectedYear, selectedTerm])
 
-  useEffect(() => {
-    fetchMarks()
-  }, [fetchMarks])
+  const fetchMarks = async () => {
+    setIsLoading(true)
+    try {
+      const fetchedMarks = await getStudentMarks(selectedClass, selectedYear, selectedTerm)
+      setMarks(fetchedMarks)
+      if (fetchedMarks.length > 0) {
+        setSubjects(Object.keys(fetchedMarks[0].subjects))
+      }
+    } catch (error) {
+      console.error('Error fetching marks:', error)
+      toast.error('Failed to fetch marks. Please try again.')
+      setMarks([])
+      setSubjects([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-  const subjects = useMemo(() => {
-    return marks && marks.length > 0 ? Object.keys(marks[0].subjects) : []
-  }, [marks])
-
-  const getAverageMarksBySubject = useCallback((): AverageMarkBySubject[] => {
-    if (!marks) return []
+  const getAverageMarksBySubject = (): AverageMarkBySubject[] => {
     const subjectTotals: { [key: string]: number } = {}
     const subjectCounts: { [key: string]: number } = {}
 
@@ -117,50 +83,28 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
       subject,
       average: total / subjectCounts[subject]
     }))
-  }, [marks])
-
-  const averageMarksBySubject = useMemo(() => getAverageMarksBySubject(), [getAverageMarksBySubject])
-
-  const handleClassChange = useCallback((value: string) => {
-    setSelectedClass(value)
-  }, [])
-
-  const handleYearChange = useCallback((value: string) => {
-    setSelectedYear(value)
-  }, [])
-
-  const handleTermChange = useCallback((value: string) => {
-    setSelectedTerm(value)
-  }, [])
-
-  const navigateToAddMarks = useCallback(() => {
-    router.push('/dashboard/marks/add')
-  }, [router])
-
-  const navigateToEditMarks = useCallback((studentId: string) => {
-    router.push(`/dashboard/marks/edit/${studentId}`)
-  }, [router])
+  }
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold ">Marks Overview</h1>
-            <CardTitle className='hidden'>
-              Marks Overview
-            </CardTitle>
-            <CardDescription>View and analyze student marks</CardDescription>
-          </div>
-          <Button onClick={navigateToAddMarks}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Add Marks
-          </Button>
+    <CardHeader>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold ">Marks Overview</h1>
+          <CardTitle className='hidden'>
+            Marks Overview
+          </CardTitle>
+          <CardDescription>View and analyze student marks</CardDescription>
         </div>
-      </CardHeader>
+        <Button onClick={() => router.push('/dashboard/marks/add')}>
+          <PlusCircle className="mr-2 h-4 w-4" /> Add Marks
+        </Button>
+      </div>
+    </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
-            <Select value={selectedClass} onValueChange={handleClassChange}>
+            <Select value={selectedClass} onValueChange={setSelectedClass}>
               <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Select class" />
               </SelectTrigger>
@@ -170,7 +114,7 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedYear} onValueChange={handleYearChange}>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
               <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Select year" />
               </SelectTrigger>
@@ -180,7 +124,7 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedTerm} onValueChange={handleTermChange}>
+            <Select value={selectedTerm} onValueChange={setSelectedTerm}>
               <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Select term" />
               </SelectTrigger>
@@ -198,13 +142,9 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-full" />
             </div>
-          ) : error ? (
-            <div className="text-center py-10">
-              <p className="text-red-500">{error}</p>
-            </div>
-          ) : marks && marks.length > 0 ? (
+          ) : marks.length > 0 ? (
             <>
-              <div className="overflow-x-auto" style={{ maxHeight: '400px' }}>
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -216,13 +156,12 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
                       <TableHead>Total</TableHead>
                       <TableHead>Average</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {marks.map((student) => (
-                      <TableRow key={student.id}>
-                        <TableCell>{student.rank ?? 'N/A'}</TableCell>
+                      <TableRow key={student.id} className="cursor-pointer hover:bg-gray-100" >
+                      <TableCell>{student.rank ?? 'N/A'}</TableCell>
                         <TableCell>{student.name}</TableCell>
                         {subjects.map((subject) => (
                           <TableCell key={subject}>{student.subjects[subject] != null ? Math.round(student.subjects[subject]) : 'N/A'}</TableCell>
@@ -231,10 +170,10 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
                         <TableCell>{student.average?.toFixed(2) ?? 'N/A'}</TableCell>
                         <TableCell>{student.status ?? 'N/A'}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm" onClick={() => navigateToEditMarks(student.id)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/marks/edit/${student.id}`)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -247,7 +186,7 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={averageMarksBySubject}>
+                    <BarChart data={getAverageMarksBySubject()}>
                       <XAxis dataKey="subject" />
                       <YAxis />
                       <Tooltip />
@@ -266,4 +205,4 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
       </CardContent>
     </Card>
   )
-}
+} */

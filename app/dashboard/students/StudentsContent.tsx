@@ -146,7 +146,6 @@ export default function StudentsContent() {
   return (
     <div className="container mx-auto py-4 px-2 sm:px-6 lg:px-8">
       <Toaster />
-      <h1 className="text-3xl font-bold mb-8">Student Data</h1>
       <div className="flex flex-col sm:flex-row justify-between mb-6 gap-4">
         <Select value={selectedClass} onValueChange={setSelectedClass}>
           <SelectTrigger className="w-full sm:w-[180px]">
@@ -158,25 +157,25 @@ export default function StudentsContent() {
             ))}
           </SelectContent>
         </Select>
-        <div className="relative w-full sm:w-auto">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <Input
-            placeholder="Search students..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full"
-          />
+        <div className="flex justify-end space-x-2 mb-6">
+          <div className="relative w-full sm:w-auto">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder="Search students..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-full"
+            />
+          </div>
+          <Button onClick={() => router.push('/dashboard/students/add')} className="flex items-center">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add Student
+          </Button>
+          <Button  onClick={() => router.push('/dashboard/students/upload')} disabled={isUploading} className="flex items-center">
+            <Upload className="mr-2 h-4 w-4" />
+            Upload Excel
+          </Button>
         </div>
-      </div>
-      <div className="flex justify-end space-x-2 mb-6">
-        <Button onClick={() => router.push('/dashboard/students/add')} className="flex items-center">
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add Student
-        </Button>
-        <Button  onClick={() => router.push('/dashboard/students/upload')} disabled={isUploading} className="flex items-center">
-          <Upload className="mr-2 h-4 w-4" />
-          Upload Excel
-        </Button>
       </div>
       {!selectedClass ? (
         <div className="text-center py-10">

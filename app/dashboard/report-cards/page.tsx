@@ -7,7 +7,10 @@ export default function ReportCardsPage() {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Student Report Cards</CardTitle>
+        <h1 className="text-3xl font-bold ">Student Report Cards</h1>
+        <CardTitle className='hidden'>
+          Student Report Cards
+        </CardTitle>
         <CardDescription>Select a class and year to view student report cards</CardDescription>
       </CardHeader>
       <Suspense fallback={<ReportCardsSkeleton />}>
