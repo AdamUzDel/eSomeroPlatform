@@ -1,12 +1,11 @@
-// app/dashboard/report-cards/[id]/page.tsx
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Head from 'next/head'
 import { getStudentById, getStudentMarksForAllTerms } from '@/lib/firebaseUtils'
-import { Student, ReportCardMark } from '@/types'
+import { Student, ReportCardMark, classes } from '@/types'
 import { Button } from "@/components/ui/button"
 import { Printer, User } from 'lucide-react'
 import { Oswald } from 'next/font/google'
@@ -136,6 +135,17 @@ export default function ReportCardPreview() {
     return sum / termsData.length
   }
 
+  const getSubjectsForClass = useCallback((className: string): { name: string; code: string }[] => {
+    const classData = classes.find(c => c.name === className)
+    return classData ? classData.subjects : []
+  }, [])
+
+  const sortedSubjects = useMemo(() => {
+    if (!student) return []
+    const classSubjects = getSubjectsForClass(student.class)
+    return classSubjects.sort((a, b) => a.name.localeCompare(b.name))
+  }, [student, getSubjectsForClass])
+
   if (isLoading) {
     return <div>Loading...</div>
   }
@@ -245,16 +255,16 @@ export default function ReportCardPreview() {
             </tr>
           </thead>
           <tbody className="font-['Times_New_Roman']">
-            {Object.entries(termsData[0]?.subjects || {}).map(([subject], index) => (
-              <tr key={subject}>
-                <td className="border px-2 py-1">{index + 1}. {subject}</td>
+            {sortedSubjects.map((subject, index) => (
+              <tr key={subject.code}>
+                <td className="border px-2 py-1">{index + 1}. {subject.name}</td>
                 {termsData.map((termData) => (
                   <React.Fragment key={termData.term}>
                     <td className="border px-2 py-1 text-center">
-                      {Math.round(termData.subjects[subject])}
+                      {termData.subjects[subject.code] != null ? Math.round(termData.subjects[subject.code]) : 'N/A'}
                     </td>
                     <td className="border px-2 py-1 text-center">
-                      {getGrade(termData.subjects[subject])}
+                      {termData.subjects[subject.code] != null ? getGrade(termData.subjects[subject.code]) : 'N/A'}
                     </td>
                   </React.Fragment>
                 ))}
@@ -330,9 +340,6 @@ export default function ReportCardPreview() {
             <p><span className="font-semibold">Promoted to:</span> </p>
             <p><span className="font-semibold">Retained in:</span> <span className="border-b border-gray-300 h-4"></span> </p>
           </div>
-          {/* <div className="grid grid-cols-2 gap-4">
-            <p><span className="font-semibold">Status:</span> {//termsData[termsData.length - 1]?.status || 'N/A'}</p>
-          </div> */}
           <div className="space-y-2">
             <p className="font-semibold">Academic Dean&apos;s Remarks:</p>
             <div className="border-b border-gray-300 h-4"></div>
