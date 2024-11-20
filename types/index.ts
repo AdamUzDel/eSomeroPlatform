@@ -125,7 +125,7 @@ const s3s4ArtSubjects = [
   { name: "Commerce", code: "COMM" },
   { name: "Literature", code: "LIT" },
   { name: "Computer", code: "COMP" },
-  { name: "Physical Education", code: "P.O.A" }
+  { name: "Principal of Accounts", code: "P.O.A" }
 ];
 
 export const classes: Class[] = [

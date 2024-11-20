@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from "@/lib/utils"
@@ -61,6 +61,41 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     role: 'Administrator',
     avatar: '/LoyolaLogoOrig.png'
   }
+
+  // New function to generate breadcrumb items
+  const breadcrumbItems = useMemo(() => {
+    const pathSegments = pathname.split('/').filter(segment => segment)
+    const items = pathSegments.map((segment, index) => {
+      const path = `/${pathSegments.slice(0, index + 1).join('/')}`
+      let label = segment.charAt(0).toUpperCase() + segment.slice(1)
+      
+      // Map segment to more readable names
+      switch (segment) {
+        case 'dashboard':
+          label = 'Dashboard'
+          break
+        case 'report-cards':
+          label = 'Report Cards'
+          break
+        case 'students':
+          label = 'Students'
+          break
+        case 'marks':
+          label = 'Marks'
+          break
+        case 'settings':
+          label = 'Settings'
+          break
+        default:
+          // If it's an ID (like in report-cards/[id]), keep it as is
+          break
+      }
+
+      return { path, label }
+    })
+
+    return items
+  }, [pathname])
 
   const SideNav = ({ isMobile = false }) => (
     <div className={cn(
@@ -147,17 +182,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Button>
             <div className="flex flex-1 justify-between px-4">
               <div className="flex flex-1 items-center">
-                <Breadcrumb>
-                  <BreadcrumbList>
-                    <BreadcrumbItem>
-                      <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+              <Breadcrumb>
+                <BreadcrumbList>
+                  {breadcrumbItems.map((item, index) => (
+                    <BreadcrumbItem key={item.path}>
+                      {index === breadcrumbItems.length - 1 ? (
+                        <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                      ) : (
+                        <>
+                          <BreadcrumbLink href={item.path}>{item.label}</BreadcrumbLink>
+                          <BreadcrumbSeparator />
+                        </>
+                      )}
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                      <BreadcrumbPage>{pathname.split('/').pop()}</BreadcrumbPage>
-                    </BreadcrumbItem>
-                  </BreadcrumbList>
-                </Breadcrumb>
+                  ))}
+                </BreadcrumbList>
+              </Breadcrumb>
               </div>
               <div className="ml-4 flex items-center md:ml-6">
                 <Button variant="ghost" size="icon" className="rounded-full">

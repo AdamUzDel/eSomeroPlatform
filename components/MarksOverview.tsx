@@ -137,9 +137,16 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
     router.push('/dashboard/marks/add')
   }, [router])
 
-  const navigateToEditMarks = useCallback((studentId: string) => {
-    router.push(`/dashboard/marks/edit/${studentId}`)
-  }, [router])
+  const navigateToEditMarks = useCallback((studentId: string, studentName: string) => {
+    const queryParams = new URLSearchParams({
+      class: selectedClass,
+      year: selectedYear,
+      term: selectedTerm,
+      studentName: studentName
+    }).toString()
+    
+    router.push(`/dashboard/marks/edit/${studentId}?${queryParams}`)
+  }, [router, selectedClass, selectedYear, selectedTerm])
 
   return (
     <Card className="w-full">
@@ -231,7 +238,7 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
                         <TableCell>{student.average?.toFixed(2) ?? 'N/A'}</TableCell>
                         <TableCell>{student.status ?? 'N/A'}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm" onClick={() => navigateToEditMarks(student.id)}>
+                          <Button variant="ghost" size="sm" onClick={() => navigateToEditMarks(student.id, student.name)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                         </TableCell>
