@@ -85,8 +85,18 @@ export default function ReportCardPreview() {
       setTotalStudents(classAverages.length);
 
       // Calculate student's average score
-      const studentAverage = studentData.marks.reduce((sum, term) => sum + term.average, 0) / studentData.marks.length;
-      const isPromoted = studentAverage >= 60
+      const studentAverage = studentData.marks.reduce((sum, term) => sum + term.average, 0) / studentData.marks.length;// Determine promotion threshold based on class
+      let promotionThreshold = 60 // Default threshold
+      if (studentData.student.class.includes('PREP') || studentData.student.class.startsWith('S1')) {
+        promotionThreshold = 45
+      } else if (studentData.student.class.startsWith('S2')) {
+        promotionThreshold = 50
+      } else if (studentData.student.class.startsWith('S3')) {
+        promotionThreshold = 60
+      }
+
+      // Determine promotion status
+      const isPromoted = studentAverage >= promotionThreshold
       const nextClass = classHierarchy[studentData.student.class as keyof typeof classHierarchy]
       setPromotionStatus({ promoted: isPromoted, nextClass: isPromoted ? nextClass : null })
 
@@ -128,7 +138,7 @@ export default function ReportCardPreview() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-gray-900"></div>
       </div>
     )
   }
