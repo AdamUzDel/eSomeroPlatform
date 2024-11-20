@@ -14,7 +14,7 @@ export default function DashboardPage() {
 
   const studentPerformance = [
     { id: 1, name: "Alice Barnaba", class: "PREP A", average: 85 },
-    { id: 2, name: "Mathew Remigio", class: "S3A", average: 78 },
+    { id: 2, name: "Mathew Albino", class: "S3A", average: 78 },
     { id: 3, name: "Adam Musa", class: "S2B", average: 92 },
   ]
 
