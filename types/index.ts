@@ -90,7 +90,7 @@ const s1Subjects = [
   { name: "Commerce", code: "COMM" },
   { name: "Arabic", code: "ARA" },
   { name: "Computer", code: "COMP" },
-  { name: "Physical Education", code: "P.O.A" },
+  { name: "Principles of Accounts", code: "P.O.A" },
 ];
 
 const prepSubjects = [
@@ -125,7 +125,7 @@ const s3s4ArtSubjects = [
   { name: "Commerce", code: "COMM" },
   { name: "Literature", code: "LIT" },
   { name: "Computer", code: "COMP" },
-  { name: "Principal of Accounts", code: "P.O.A" }
+  { name: "Principles of Accounts", code: "P.O.A" }
 ];
 
 export const classes: Class[] = [
