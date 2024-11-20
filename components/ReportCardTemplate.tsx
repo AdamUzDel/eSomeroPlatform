@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import Image from 'next/image'
-import { Student, ReportCardMark } from '@/types'
+import { Student, ReportCardMark, classes } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User } from 'lucide-react'
 import { Oswald } from 'next/font/google'
@@ -15,9 +15,12 @@ interface ReportCardTemplateProps {
   student: Student
   marks: ReportCardMark[]
   year: string
+  studentRank: number | null
+  totalStudents: number
+  promotionStatus: { promoted: boolean; nextClass: string | null }
 }
 
-export function ReportCardTemplate({ student, marks, year }: ReportCardTemplateProps) {
+export function ReportCardTemplate({ student, marks, year, studentRank, totalStudents, promotionStatus }: ReportCardTemplateProps) {
   const getGrade = (score: number): string => {
     if (score >= 80) return 'A'
     if (score >= 75) return 'A-'
@@ -37,6 +40,16 @@ export function ReportCardTemplate({ student, marks, year }: ReportCardTemplateP
     const sum = marks.reduce((acc, term) => acc + term.average, 0)
     return sum / marks.length
   }
+
+  const getSubjectsForClass = (className: string): { name: string; code: string }[] => {
+    const classData = classes.find(c => c.name === className)
+    return classData ? classData.subjects : []
+  }
+
+  const sortedSubjects = useMemo(() => {
+    const classSubjects = getSubjectsForClass(student.class)
+    return classSubjects.sort((a, b) => a.name.localeCompare(b.name))
+  }, [student.class])
 
   const meanScore = calculateMeanScore(marks)
   const meanGrade = getGrade(meanScore)
@@ -58,9 +71,9 @@ export function ReportCardTemplate({ student, marks, year }: ReportCardTemplateP
           <Image
             src="/LoyolaLogoOrig.png"
             alt="School Logo"
-            width={80}
-            height={80}
-            className="object-cover"
+            width={100}
+            height={100}
+            className="object-contain"
           />
           <div className='ml-4'>
             <h1 className={`${oswald.className} text-2xl font-bold mb-1`}>
@@ -80,14 +93,14 @@ export function ReportCardTemplate({ student, marks, year }: ReportCardTemplateP
       <div className="flex justify-between items-start mb-4 items-center text-sm relative">
         <div className="flex items-start items-center gap-4">
           <div className="flex items-center justify-center">
-          <Avatar className="w-20 h-20">
-            {student.photo ? (
-              <AvatarImage src={student.photo} alt={student.name} className="object-cover" />
-            ) : null}
-            <AvatarFallback className="bg-gray-200">
-              <User className="h-10 w-10 text-gray-400" />
-            </AvatarFallback>
-          </Avatar>
+            <Avatar className="w-20 h-20">
+              {student.photo ? (
+                <AvatarImage src={student.photo} alt={student.name} className="object-cover" />
+              ) : null}
+              <AvatarFallback className="bg-gray-200">
+                <User className="h-10 w-10 text-gray-400" />
+              </AvatarFallback>
+            </Avatar>
           </div>
           <div>
             <p className='my-0'><span className="font-semibold">NAME:</span> {student.name}</p>
@@ -125,16 +138,16 @@ export function ReportCardTemplate({ student, marks, year }: ReportCardTemplateP
           </tr>
         </thead>
         <tbody className="font-['Times_New_Roman']">
-          {Object.entries(marks[0]?.subjects || {}).map(([subject], index) => (
-            <tr key={subject}>
-              <td className="border px-1 py-1">{index + 1}. {subject}</td>
+          {sortedSubjects.map((subject, index) => (
+            <tr key={subject.code}>
+              <td className="border px-1 py-1">{index + 1}. {subject.name}</td>
               {marks.map((termData) => (
                 <React.Fragment key={termData.term}>
                   <td className="border px-1 py-1 text-center">
-                    {Math.round(termData.subjects[subject])}
+                    {termData.subjects[subject.code] != null ? Math.round(termData.subjects[subject.code]) : '-'}
                   </td>
                   <td className="border px-1 py-1 text-center">
-                    {getGrade(termData.subjects[subject])}
+                    {termData.subjects[subject.code] != null ? getGrade(termData.subjects[subject.code]) : ''}
                   </td>
                 </React.Fragment>
               ))}
@@ -203,19 +216,23 @@ export function ReportCardTemplate({ student, marks, year }: ReportCardTemplateP
 
       {/* Footer Information */}
       <div className="space-y-2 text-xs">
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           <p><span className="font-semibold">Mean Score:</span> {meanScore.toFixed(1)}</p>
           <p><span className="font-semibold">Mean Grade:</span> {meanGrade}</p>
-          <p><span className="font-semibold">Position:</span> {marks[marks.length - 1]?.rank || 'N/A'}</p>
-          <p><span className="font-semibold">Promoted to:</span> </p>
-          <p><span className="font-semibold">Retained in:</span> <span className="border-b border-gray-300 h-4"></span> </p>
+          <p><span className="font-semibold">Position:</span> {studentRank !== null ? `${studentRank} out of ${totalStudents}` : 'N/A'}</p>
+          {promotionStatus.promoted ? (
+            <p><span className="font-semibold">Promoted to:</span> {promotionStatus.nextClass}</p>
+          ) : (
+            <p><span className="font-semibold">Retained in:</span> {student.class}</p>
+          )}
+          <p></p>
         </div>
-        <div className="space-y-1">
-          <p className="font-semibold">Academic Dean&apos;s Remarks:</p>
+        <div className="space-y-2">
+          <p className="font-semibold mt-4">Academic Dean&apos;s Remarks:</p>
           <div className="border-b border-gray-300 h-4"></div>
         </div>
         <div className="space-y-1">
-          <p className="font-semibold">Principal&apos;s Comments:</p>
+          <p className="font-semibold mt-4">Principal&apos;s Comments:</p>
           <div className="border-b border-gray-300 h-4"></div>
         </div>
       </div>

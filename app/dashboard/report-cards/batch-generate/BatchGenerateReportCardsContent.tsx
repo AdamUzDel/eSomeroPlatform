@@ -1,3 +1,4 @@
+// app/dashboard/report-cards/batch-generate/BatchGenerateReportCardsContent.tsx
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
@@ -7,8 +8,8 @@ import ReactDOMServer from 'react-dom/server'
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { getStudentsByClass, getStudentMarksForAllTerms } from '@/lib/firebaseUtils'
-import { Student } from '@/types'
+import { getStudentsByClass, getStudentMarksForAllTerms, getClassAverageScores } from '@/lib/firebaseUtils'
+import { Student, classHierarchy } from '@/types'
 import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
 import { ReportCardTemplate } from '@/components/ReportCardTemplate'
@@ -29,6 +30,9 @@ export default function BatchGenerateReportCards() {
   const [error, setError] = useState<string | null>(null)
   const [generationResults, setGenerationResults] = useState<GenerationResult[]>([])
   const [showSummary, setShowSummary] = useState(false)
+  const [studentRank, setStudentRank] = useState<number | null>(null)
+  const [totalStudents, setTotalStudents] = useState<number>(0)
+  const [promotionStatus, setPromotionStatus] = useState<{ promoted: boolean; nextClass: string | null }>({ promoted: false, nextClass: null })
 
   const className = searchParams.get('class') || ''
   const year = searchParams.get('year') || ''
@@ -52,13 +56,27 @@ export default function BatchGenerateReportCards() {
       const marks = await getStudentMarksForAllTerms(student.class, year, student.id)
       console.log(`Fetched marks for ${student.name}:`, marks)
 
+      // In the fetchStudentData function
+      const classAverages = await getClassAverageScores(student.class, year);
+      setTotalStudents(classAverages.length);
+
+      // Calculate student's average score
+      const studentAverage = marks.reduce((sum, term) => sum + term.average, 0) / marks.length;
+      const isPromoted = studentAverage >= 60
+      const nextClass = classHierarchy[student.class as keyof typeof classHierarchy]
+      setPromotionStatus({ promoted: isPromoted, nextClass: isPromoted ? nextClass : null })
+
+      // Calculate student rank
+      const rank = classAverages.filter(avg => avg > studentAverage).length + 1;
+      setStudentRank(rank);
+
       const reportCardElement = document.createElement('div')
       reportCardElement.style.width = '210mm'
       reportCardElement.style.height = '297mm'
       document.body.appendChild(reportCardElement)
 
       const root = ReactDOM.createRoot(reportCardElement)
-      root.render(<ReportCardTemplate student={student} marks={marks} year={year} />)
+      root.render(<ReportCardTemplate student={student} marks={marks} year={year} studentRank={studentRank} totalStudents={totalStudents} promotionStatus={promotionStatus} />)
 
       // Wait for React to finish rendering
       await new Promise(resolve => setTimeout(resolve, 1000))
@@ -93,7 +111,7 @@ export default function BatchGenerateReportCards() {
 
         // Fallback method: Render React component to string and use jsPDF directly
         const htmlString = ReactDOMServer.renderToString(
-          <ReportCardTemplate student={student} marks={marks} year={year} />
+          <ReportCardTemplate student={student} marks={marks} year={year} studentRank={studentRank} totalStudents={totalStudents} promotionStatus={promotionStatus} />
         )
 
         const pdf = new jsPDF({

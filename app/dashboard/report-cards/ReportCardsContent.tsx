@@ -12,6 +12,7 @@ import { classes, Student, years } from '@/types'
 import { Search } from 'lucide-react'
 import { /* FileSpreadsheet, */ Printer } from 'lucide-react'
 import { Button } from "@/components/ui/button"
+import Link from 'next/link'
 
 export default function ReportCardsContent() {
   const router = useRouter()
@@ -155,7 +156,7 @@ export default function ReportCardsContent() {
                   onClick={() => handleStudentClick(student.id)}
                 >
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{student.name}</TableCell>
+                  <TableCell> <Link href={`/dashboard/report-cards/${student.id}?year=${selectedYear}`} >{student.name}</Link></TableCell>
                   <TableCell>{student.id}</TableCell>
                   <TableCell>{student.sex}</TableCell>
                 </TableRow>

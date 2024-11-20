@@ -189,3 +189,20 @@ export const classes: Class[] = [
 
 export const years = ['2024', '2025', '2026', '2027'];
 export const terms = ['Term 1', 'Term 2', 'Term 3'];
+
+export const classHierarchy = {
+  'PREP-A': 'Senior One',
+  'PREP-B': 'Senior One',
+  'S1A': 'Senior Two',
+  'S1B': 'Senior Two',
+  'S1C': 'Senior Two',
+  'S1D': 'Senior Two',
+  'S1E': 'Senior Two',
+  'S2A': 'Senior Three',
+  'S2B': 'Senior Three',
+  'S2C': 'Senior Three',
+  'S3A': 'Senior Four',
+  'S3B': 'Senior Four',
+  'S4A': null,
+  'S4B': null,
+}

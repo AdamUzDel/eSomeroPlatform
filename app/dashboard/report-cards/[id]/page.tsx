@@ -1,22 +1,14 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
-import Image from 'next/image'
 import Head from 'next/head'
-import { getStudentById, getStudentMarksForAllTerms } from '@/lib/firebaseUtils'
-import { Student, ReportCardMark, classes } from '@/types'
+import { getStudentById, getStudentMarksForAllTerms, getClassAverageScores  } from '@/lib/firebaseUtils'
+import { Student, ReportCardMark, classHierarchy } from '@/types'
 import { Button } from "@/components/ui/button"
-import { Printer, User } from 'lucide-react'
-import { Oswald } from 'next/font/google'
-import React from 'react'
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { QRCodeSVG } from 'qrcode.react'
-
-const oswald = Oswald({ 
-  subsets: ['latin'],
-  display: 'swap',
-})
+import { Printer, ArrowLeft } from 'lucide-react'
+import { ReportCardTemplate } from '@/components/ReportCardTemplate'
+import Link from 'next/link'
 
 // Define a type for the cache item
 type CacheItem = {
@@ -51,6 +43,9 @@ export default function ReportCardPreview() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [pageTitle, setPageTitle] = useState('Report Card')
+  const [studentRank, setStudentRank] = useState<number | null>(null)
+  const [totalStudents, setTotalStudents] = useState<number>(0)
+  const [promotionStatus, setPromotionStatus] = useState<{ promoted: boolean; nextClass: string | null }>({ promoted: false, nextClass: null })
 
   const fetchStudentData = useCallback(async () => {
     setIsLoading(true)
@@ -85,6 +80,20 @@ export default function ReportCardPreview() {
       setTermsData(studentData.marks)
       setPageTitle(`${studentData.student.name} - LSS Report Card`)
 
+      // Fetch class average scores (optimized)
+      const classAverages = await getClassAverageScores(studentData.student.class, selectedYear);
+      setTotalStudents(classAverages.length);
+
+      // Calculate student's average score
+      const studentAverage = studentData.marks.reduce((sum, term) => sum + term.average, 0) / studentData.marks.length;
+      const isPromoted = studentAverage >= 60
+      const nextClass = classHierarchy[studentData.student.class as keyof typeof classHierarchy]
+      setPromotionStatus({ promoted: isPromoted, nextClass: isPromoted ? nextClass : null })
+
+      // Calculate student rank
+      const rank = classAverages.filter(avg => avg > studentAverage).length + 1;
+      setStudentRank(rank);
+
       if (studentData.marks.length === 0) {
         console.log(`No data found for the year ${selectedYear}`)
         setError(`No data found for the year ${selectedYear}`)
@@ -98,8 +107,11 @@ export default function ReportCardPreview() {
   }, [params.id, selectedYear])
 
   useEffect(() => {
-    if (params.id && searchParams.get('year')) {
-      setSelectedYear(searchParams.get('year') as string)
+    if (params.id) {
+      const year = searchParams.get('year')
+      if (year) {
+        setSelectedYear(year)
+      }
       fetchStudentData()
     }
   }, [params.id, searchParams, fetchStudentData])
@@ -113,60 +125,48 @@ export default function ReportCardPreview() {
     window.print()
   }
 
-  const reportCardUrl = `https://esomero.bytebasetech.com/report-cards/${params.id}?year=${selectedYear}`
-
-  const getGrade = (score: number): string => {
-    if (score >= 80) return 'A'
-    if (score >= 75) return 'A-'
-    if (score >= 70) return 'B+'
-    if (score >= 65) return 'B'
-    if (score >= 60) return 'B-'
-    if (score >= 55) return 'C+'
-    if (score >= 50) return 'C'
-    if (score >= 45) return 'C-'
-    if (score >= 40) return 'D+'
-    if (score >= 35) return 'D'
-    if (score >= 30) return 'D-'
-    return 'E'
-  }
-
-  const calculateMeanScore = (termsData: ReportCardMark[]): number => {
-    const sum = termsData.reduce((acc, term) => acc + term.average, 0)
-    return sum / termsData.length
-  }
-
-  const getSubjectsForClass = useCallback((className: string): { name: string; code: string }[] => {
-    const classData = classes.find(c => c.name === className)
-    return classData ? classData.subjects : []
-  }, [])
-
-  const sortedSubjects = useMemo(() => {
-    if (!student) return []
-    const classSubjects = getSubjectsForClass(student.class)
-    return classSubjects.sort((a, b) => a.name.localeCompare(b.name))
-  }, [student, getSubjectsForClass])
-
   if (isLoading) {
-    return <div>Loading...</div>
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
+      </div>
+    )
   }
 
   if (error) {
-    return <div>Error: {error}</div>
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+      </div>
+    )
   }
 
   if (!student) {
-    return <div>Student not found</div>
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Warning: </strong>
+          <span className="block sm:inline">Student not found</span>
+        </div>
+      </div>
+    )
   }
-
-  const meanScore = calculateMeanScore(termsData)
-  const meanGrade = getGrade(meanScore)
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 print:p-0 print:bg-white">
       <Head>
         <title>{pageTitle}</title>
       </Head>
-      <div className="mb-4 print:hidden">
+      <div className="mb-4 print:hidden flex justify-between items-center">
+        <Link href="/dashboard/students" passHref>
+          <Button variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Students
+          </Button>
+        </Link>
         <Button onClick={handlePrint}>
           <Printer className="mr-2 h-4 w-4" />
           Print Report Card
@@ -174,181 +174,15 @@ export default function ReportCardPreview() {
       </div>
 
       {/* Report card section */}
-      <div id="report-card-content" className="bg-white mx-auto w-[210mm] h-[297mm] p-8 shadow-lg print:shadow-none print:w-full print:h-auto relative">
-        {/* Watermark */}
-        <div 
-          className="absolute mx-48 mt-8 inset-0 bg-contain bg-center bg-no-repeat opacity-5 pointer-events-none"
-          style={{ backgroundImage: "url('/LoyolaLogoOrig.png')" }}
-          aria-hidden="true"
-        ></div>
-
-        {/* Header */}
-        <div className="text-center relative">
-          <div className="flex justify-center items-center mb-2">
-            <Image
-              src="/LoyolaLogoOrig.png"
-              alt="School Logo"
-              width={100}
-              height={100}
-              className="object-contain"
-            />
-            <div className='ml-4'>
-              <h1 className={`${oswald.className} text-2xl font-bold mb-1`}>
-                LOYOLA SECONDARY SCHOOL - WAU
-              </h1>
-              <p className="text-sm">Jebel Kheir, P.O. Box 2 - Wau, South Sudan Email: principal.lss@jesuit.net</p>
-              <p className="text-sm">Phone: +211 916363969</p>
-              <p className={`${oswald.className} font-semibold mt-2`}>EXAMINATIONS OFFICE</p>
-            </div>
-          </div>
-          
-          <div className="border-b-4 border-red-500"></div>
-          <p className={`${oswald.className} mt-2 ml-24 font-semibold`}>ACADEMIC PROGRESS REPORT</p>
-        </div>
-
-        {/* Student Info */}
-        <div className="flex justify-between items-start mb-4 items-center text-sm relative">
-          <div className="flex items-start items-center gap-8">
-            <div className="flex items-center justify-center">
-            <Avatar className="w-20 h-20">
-              {student.photo ? (
-                <AvatarImage src={student.photo} alt={student.name} className="object-cover" />
-              ) : null}
-              <AvatarFallback className="bg-gray-200">
-                <User className="h-10 w-10 text-gray-400" />
-              </AvatarFallback>
-            </Avatar>
-            </div>
-            <div>
-              <p><span className="font-semibold">NAME:</span> {student.name}</p>
-              <p><span className="font-semibold">CLASS:</span> {student.class}</p>
-            </div>
-          </div>
-          <div>
-            <p><span className="font-semibold">TERM:</span> {termsData.length > 0 ? termsData[termsData.length - 1].term : 'N/A'}</p>
-            <p><span className="font-semibold">YEAR:</span> {selectedYear}</p>
-          </div>
-          <div className="">
-            <QRCodeSVG value={reportCardUrl} size={64} />
-          </div>
-        </div>
-
-        {/* Marks Table */}
-        <table className="w-full border-collapse mb-4 text-sm relative">
-          <thead>
-            <tr>
-              <th className="border px-2 py-1 text-left"></th>
-              {termsData.map((termData) => (
-                <th key={termData.term} className="border px-2 py-1 text-center" colSpan={2}>
-                  {termData.term}<br />OUT OF 100
-                </th>
-              ))}
-            </tr>
-            <tr>
-                <th className="border px-2 py-1 text-center">SUBJECT</th>
-              {termsData.map((termData) => (
-                <React.Fragment key={termData.term}>
-                  <th className="border px-2 py-1 text-center">TOTAL SCORE</th>
-                  <th className="border px-2 py-1 text-center">GRADE</th>
-                </React.Fragment>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="font-['Times_New_Roman']">
-            {sortedSubjects.map((subject, index) => (
-              <tr key={subject.code}>
-                <td className="border px-2 py-1">{index + 1}. {subject.name}</td>
-                {termsData.map((termData) => (
-                  <React.Fragment key={termData.term}>
-                    <td className="border px-2 py-1 text-center">
-                      {termData.subjects[subject.code] != null ? Math.round(termData.subjects[subject.code]) : 'N/A'}
-                    </td>
-                    <td className="border px-2 py-1 text-center">
-                      {termData.subjects[subject.code] != null ? getGrade(termData.subjects[subject.code]) : 'N/A'}
-                    </td>
-                  </React.Fragment>
-                ))}
-              </tr>
-            ))}
-            <tr className="font-semibold">
-              <td className="border px-2 py-1 text-center">TOTAL</td>
-              {termsData.map((termData) => (
-                <td key={termData.term} className="border px-2 py-1 text-center" colSpan={2}>
-                  {Math.round(termData.total)}
-                </td>
-              ))}
-            </tr>
-            <tr className="font-semibold">
-              <td className="border px-2 py-1 text-center">AVERAGE</td>
-              {termsData.map((termData) => (
-                <React.Fragment key={termData.term}>
-                  <td className="border px-2 py-1 text-center">
-                    {termData.average.toFixed(1)}
-                  </td>
-                  <td className="border px-2 py-1 text-center">
-                    {getGrade(termData.average)}
-                  </td>
-                </React.Fragment>
-              ))}
-            </tr>
-          </tbody>
-        </table>
-
-        {/* Grading Scale */}
-        <div className="mb-6 text-xs flex items-center relative">
-          <div className="font-semibold mb-2">GRADES</div>
-          <table className="w-full border-collapse ml-2 text-center">
-            <tbody>
-              <tr>
-                <td className="border px-2 py-1">A</td>
-                <td className="border px-2 py-1">A-</td>
-                <td className="border px-2 py-1">B+</td>
-                <td className="border px-2 py-1">B</td>
-                <td className="border px-2 py-1">B-</td>
-                <td className="border px-2 py-1">C+</td>
-                <td className="border px-2 py-1">C</td>
-                <td className="border px-2 py-1">C-</td>
-                <td className="border px-2 py-1">D+</td>
-                <td className="border px-2 py-1">D</td>
-                <td className="border px-2 py-1">D-</td>
-                <td className="border px-2 py-1">E</td>
-              </tr>
-              <tr>
-                <td className="border px-2 py-1">80-100</td>
-                <td className="border px-2 py-1">75-79</td>
-                <td className="border px-2 py-1">70-74</td>
-                <td className="border px-2 py-1">65-69</td>
-                <td className="border px-2 py-1">60-64</td>
-                <td className="border px-2 py-1">55-59</td>
-                <td className="border px-2 py-1">50-54</td>
-                <td className="border px-2 py-1">45-49</td>
-                <td className="border px-2 py-1">40-44</td>
-                <td className="border px-2 py-1">35-39</td>
-                <td className="border px-2 py-1">30-34</td>
-                <td className="border px-2 py-1">Below 30</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Footer Information */}
-        <div className="space-y-4 text-sm relative">
-          <div className="grid grid-cols-5 gap-2">
-            <p><span className="font-semibold">Mean Score:</span> {meanScore.toFixed(1)}</p>
-            <p><span className="font-semibold">Mean Grade:</span> {meanGrade}</p>
-            <p><span className="font-semibold">Position:</span> {termsData[termsData.length - 1]?.rank || 'N/A'}</p>
-            <p><span className="font-semibold">Promoted to:</span> </p>
-            <p><span className="font-semibold">Retained in:</span> <span className="border-b border-gray-300 h-4"></span> </p>
-          </div>
-          <div className="space-y-2">
-            <p className="font-semibold">Academic Dean&apos;s Remarks:</p>
-            <div className="border-b border-gray-300 h-4"></div>
-          </div>
-          <div className="space-y-2">
-            <p className="font-semibold">Principal&apos;s Comments:</p>
-            <div className="border-b border-gray-300 h-4"></div>
-          </div>
-        </div>
+      <div id="report-card-content" className="bg-white mx-auto w-[210mm] h-[297mm] shadow-lg print:shadow-none print:w-full print:h-auto relative">
+      <ReportCardTemplate 
+          student={student} 
+          marks={termsData} 
+          year={selectedYear} 
+          studentRank={studentRank}
+          totalStudents={totalStudents}
+          promotionStatus={promotionStatus}
+        />
       </div>
 
       <style jsx global>{`

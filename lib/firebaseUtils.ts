@@ -250,6 +250,76 @@ export async function getStudentMarksForAllTerms(studentClass: string, year: str
   return termsData
 }
 
+export async function getClassMarksForYear(className: string, year: string): Promise<ReportCardMark[]> {
+  try {
+    const studentsRef = collection(db, 'students');
+    const studentsQuery = query(studentsRef, where('class', '==', className));
+    const studentsSnapshot = await getDocs(studentsQuery);
+
+    const classMarks: ReportCardMark[] = [];
+
+    for (const studentDoc of studentsSnapshot.docs) {
+      const studentId = studentDoc.id;
+      const marksRef = collection(db, 'marks', studentId, year);
+      const markSnapshot = await getDocs(marksRef);
+
+      for (const marksSnapshot of markSnapshot.docs){
+        if (marksSnapshot.exists()) {
+          const marksData = marksSnapshot.data();
+          for (const term in marksData) {
+            if (marksData.hasOwnProperty(term)) {
+              const termData = marksData[term] as ReportCardMark;
+              classMarks.push({
+                ...termData,
+                id: `${studentId}-${year}-${term}`,
+                class: className,
+                year: year,
+                term: term,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return classMarks;
+  } catch (error) {
+    console.error('Error getting class marks for year:', error);
+    throw error;
+  }
+}
+
+export async function getClassAverageScores(className: string, year: string): Promise<number[]> {
+  console.log(`Fetching class average scores for class ${className}, year ${year}`);
+
+  // Fetch all students in the class
+  const studentsRef = collection(db, 'students');
+  const studentsQuery = query(studentsRef, where('class', '==', className));
+  const studentsSnapshot = await getDocs(studentsQuery);
+
+  const averageScores: number[] = [];
+
+  for (const studentDoc of studentsSnapshot.docs) {
+    const studentId = studentDoc.id;
+    console.log(`Processing student: ${studentId}`);
+
+    // Use the existing getStudentMarksForAllTerms function
+    const studentMarks = await getStudentMarksForAllTerms(className, year, studentId);
+
+    if (studentMarks.length > 0) {
+      // Calculate the average score for this student across all terms
+      const studentAverage = studentMarks.reduce((sum, term) => sum + term.average, 0) / studentMarks.length;
+      console.log(`Average score for student ${studentId}: ${studentAverage}`);
+      averageScores.push(studentAverage);
+    } else {
+      console.log(`No marks found for student ${studentId}`);
+    }
+  }
+
+  console.log(`Class average scores: ${averageScores}`);
+  return averageScores;
+}
+
 export async function addStudentMarks(
   studentName: string,
   className: string,
