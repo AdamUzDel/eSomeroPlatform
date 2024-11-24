@@ -2,7 +2,7 @@
 import { db, storage } from './firebase';
 import { collection, doc, setDoc, getDocs, getDoc, query, where, deleteDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Student, StudentMark, YearData, TermData, Mark, ReportCardMark } from '@/types';
+import { Student, StudentMark, YearData, TermData, Mark, ReportCardMark, YearlyStudentMarks, YearlyStudentMark } from '@/types';
 
 export const addStudent = async (student: Omit<Student, 'id'>): Promise<string> => {
   const docRef = doc(collection(db, 'students'));
@@ -147,102 +147,6 @@ export const getMarks = async (studentId: string): Promise<YearData> => {
 
   return yearData;
 };
-/* 
-export async function getStudentMarks(className: string, year: string, term: string): Promise<StudentMark[]> {
-  try {
-    // 1. Get all students in the specified class
-    const studentsRef = collection(db, 'students');
-    const studentsQuery = query(studentsRef, where('class', '==', className));
-    const studentsSnapshot = await getDocs(studentsQuery);
-
-    // 2. Prepare promises for fetching marks
-    const marksPromises = studentsSnapshot.docs.map(async (studentDoc) => {
-      const studentId = studentDoc.id;
-      const studentName = studentDoc.data().name;
-      const markRef = doc(db, 'marks', studentId, year, term);
-      const markSnapshot = await getDoc(markRef);
-      return { studentId, studentName, markSnapshot };
-    });
-
-    // 3. Fetch all marks in parallel
-    const marksResults = await Promise.all(marksPromises);
-
-    // 4. Process marks data
-    const studentMarks: StudentMark[] = marksResults
-      .map(({ studentId, studentName, markSnapshot }) => {
-        if (markSnapshot.exists()) {
-          const markData = markSnapshot.data() as Mark;
-          return {
-            id: studentId,
-            name: studentName,
-            subjects: markData.subjects,
-            average: markData.average,
-            rank: markData.rank,
-            status: markData.status,
-            total: markData.total
-          };
-        }
-        return null;
-      })
-      .filter((mark): mark is StudentMark => mark !== null)
-      .sort((a, b) => a.rank - b.rank);
-
-    return studentMarks;
-  } catch (error) {
-    console.error('Error getting student marks:', error);
-    throw error;
-  }
-}
- */
-
-/* export async function getStudentMarks(className: string, year: string, term: string): Promise<StudentMark[]> {
-  try {
-    // First, get all students in the specified class
-    const studentsRef = collection(db, 'students');
-    const studentsQuery = query(studentsRef, where('class', '==', className));
-    const studentsSnapshot = await getDocs(studentsQuery);
-
-    const studentMarks: StudentMark[] = [];
-
-    // For each student, fetch their marks
-    for (const studentDoc of studentsSnapshot.docs) {
-      const studentId = studentDoc.id;
-      const studentName = studentDoc.data().name;
-
-      // Construct the path to the student's marks for the specified year and term
-      const markRef = doc(db, 'marks', studentId, year, term);
-      const markSnapshot = await getDoc(markRef);
-
-      if (markSnapshot.exists()) {
-        const markData = markSnapshot.data() as { [key: string]: Mark };
-        const termData = markData[term];
-
-        if (termData) {
-          // Construct the StudentMark object
-          const studentMark: StudentMark = {
-            id: studentId,
-            name: studentName,
-            subjects: termData.subjects,
-            average: termData.average,
-            rank: termData.rank,
-            status: termData.status,
-            total: termData.total
-          };
-
-          studentMarks.push(studentMark);
-        }
-      }
-    }
-
-    // Sort the studentMarks array by rank
-    studentMarks.sort((a, b) => a.rank - b.rank);
-
-    return studentMarks;
-  } catch (error) {
-    console.error('Error getting student marks:', error);
-    throw error;
-  }
-} */
 
 export async function getStudentMarks(
   className: string,
@@ -339,58 +243,6 @@ export async function getClassMarksForYear(className: string, year: string): Pro
   }
 }
 
-/* export async function getStudentMarksForAllTerms(studentClass: string, year: string, studentId: string): Promise<ReportCardMark[]> {
-  console.log(`Fetching marks for student ${studentId}, class ${studentClass}, year ${year}`)
-  
-  const studentMarksRef = collection(db, "marks", studentId, year)
-  console.log('Collection reference:', studentMarksRef.path)
-  
-  const studentMarksDocs = await getDocs(studentMarksRef)
-
-  if (studentMarksDocs.empty) {
-    console.log(`No documents found in collection: ${studentMarksRef.path}`)
-    return []
-  }
-
-  const termsData: ReportCardMark[] = []
-
-  studentMarksDocs.forEach((doc) => {
-    console.log(`Document ${doc.id} data:`, doc.data())
-    const docData = doc.data()
-    
-    // Iterate through Term 1, Term 2, Term 3
-    for (const termKey in docData) {
-      if (docData.hasOwnProperty(termKey) && termKey.startsWith('Term')) {
-        const termData = docData[termKey] as ReportCardMark
-        console.log(`${termKey} data:`, termData)
-        
-        termsData.push({
-          id: `${studentId}-${year}-${termKey}`,
-          class: studentClass,
-          year: year,
-          term: termKey,
-          average: termData.average || 0,
-          rank: termData.rank || 0,
-          status: termData.status || '',
-          subjects: termData.subjects || {},
-          total: termData.total || 0
-        })
-      }
-    }
-  })
-
-  console.log('Processed results:', termsData)
-
-  // Sort the terms data by term number
-  termsData.sort((a, b) => {
-    const termNumberA = parseInt(a.term.split(' ')[1])
-    const termNumberB = parseInt(b.term.split(' ')[1])
-    return termNumberA - termNumberB
-  })
-
-  return termsData
-} */
-
 // optimised
 export async function getStudentMarksForAllTerms(
   studentClass: string,
@@ -438,37 +290,6 @@ export async function getStudentMarksForAllTerms(
     throw error;
   }
 }
-
-/* export async function getClassAverageScores(className: string, year: string): Promise<number[]> {
-  console.log(`Fetching class average scores for class ${className}, year ${year}`);
-
-  // Fetch all students in the class
-  const studentsRef = collection(db, 'students');
-  const studentsQuery = query(studentsRef, where('class', '==', className));
-  const studentsSnapshot = await getDocs(studentsQuery);
-
-  const averageScores: number[] = [];
-
-  for (const studentDoc of studentsSnapshot.docs) {
-    const studentId = studentDoc.id;
-    console.log(`Processing student: ${studentId}`);
-
-    // Use the existing getStudentMarksForAllTerms function
-    const studentMarks = await getStudentMarksForAllTerms(className, year, studentId);
-
-    if (studentMarks.length > 0) {
-      // Calculate the average score for this student across all terms
-      const studentAverage = studentMarks.reduce((sum, term) => sum + term.average, 0) / studentMarks.length;
-      console.log(`Average score for student ${studentId}: ${studentAverage}`);
-      averageScores.push(studentAverage);
-    } else {
-      console.log(`No marks found for student ${studentId}`);
-    }
-  }
-
-  console.log(`Class average scores: ${averageScores}`);
-  return averageScores;
-} */
 
 // optimised
 export async function getClassAverageScores(
@@ -577,3 +398,81 @@ export const uploadImage = async (file: File, path: string): Promise<string> => 
   const downloadURL = await getDownloadURL(storageRef);
   return downloadURL;
 };
+
+export async function getYearlyStudentMarks(
+  year: string,
+  className: string
+): Promise<YearlyStudentMarks> {
+  const yearlyMarks: YearlyStudentMarks = {};
+  const terms = ['Term 1', 'Term 2', 'Term 3'];
+
+  try {
+    // Fetch all students in the specified class in a single query
+    const studentsQuery = query(collection(db, 'students'), where('class', '==', className));
+    const studentsSnapshot = await getDocs(studentsQuery);
+
+    if (studentsSnapshot.empty) {
+      console.log('No students found for the specified class.');
+      return yearlyMarks;
+    }
+
+    const studentPromises = studentsSnapshot.docs.map(async (studentDoc) => {
+      const studentId = studentDoc.id;
+      const studentData = studentDoc.data();
+
+      const yearlyStudentMark: YearlyStudentMark = {
+        id: studentId,
+        name: studentData.name,
+        sex: studentData.sex, // Include sex/gender
+        stream: className, // Using class as stream
+        terms: {}
+      };
+
+      // Fetch marks for all terms in parallel
+      const termPromises = terms.map(async (term) => {
+        const markRef = doc(db, 'marks', studentId, year, term);
+        const markSnapshot = await getDoc(markRef);
+
+        if (markSnapshot.exists()) {
+          const markData = markSnapshot.data();
+          const termData = markData[term]; // Access the term data wrapped inside the term key
+
+          if (termData) {
+            return {
+              term,
+              studentMark: {
+                id: studentId,
+                name: studentData.name,
+                subjects: termData.subjects || {},
+                average: termData.average || 0,
+                rank: termData.rank || 0,
+                status: termData.status || '',
+                total: termData.total || 0
+              }
+            };
+          }
+        }
+        return null;
+      });
+
+      const termResults = await Promise.all(termPromises);
+      termResults.forEach((result) => {
+        if (result) {
+          yearlyStudentMark.terms[result.term] = result.studentMark;
+        }
+      });
+
+      return { studentId, yearlyStudentMark };
+    });
+
+    const studentsData = await Promise.all(studentPromises);
+    studentsData.forEach(({ studentId, yearlyStudentMark }) => {
+      yearlyMarks[studentId] = yearlyStudentMark;
+    });
+
+    return yearlyMarks;
+  } catch (error) {
+    console.error('Error fetching yearly student marks:', error);
+    throw error;
+  }
+}

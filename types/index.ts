@@ -50,14 +50,6 @@ export interface Student {
   photo?: string;
 }
 
-/* export interface Mark {
-  subjects: { [subjectCode: string]: number };
-  total: number;
-  average: number;
-  rank: number;
-  status: string;
-} */
-
 export interface TermData {
   [term: string]: Mark;
 }
@@ -205,4 +197,19 @@ export const classHierarchy = {
   'S3B': 'Senior Four',
   'S4A': null,
   'S4B': null,
+}
+
+export interface YearlyStudentMark {
+  id: string;
+  name: string;
+  sex: string; // Added this line
+  stream: string;
+  terms: {
+    [key: string]: StudentMark;
+  };
+  rank?: number;
+}
+
+export interface YearlyStudentMarks {
+  [studentId: string]: YearlyStudentMark;
 }
