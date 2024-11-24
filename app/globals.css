@@ -98,6 +98,21 @@ body.readable-font {
   font-family: Arial, sans-serif;
 }
 
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-table,
+  #printable-table * {
+    visibility: visible;
+  }
+  #printable-table {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+}
+
 /* Ensure font size changes are applied to all text elements */
 html {
   font-size: 16px; /* Base font size */
