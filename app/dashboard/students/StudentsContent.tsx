@@ -157,7 +157,7 @@ export default function StudentsContent() {
             ))}
           </SelectContent>
         </Select>
-        <div className="flex justify-end space-x-2 mb-6">
+        <div className="flex flex-col sm:flex-row justify-end space-x-2 mb-6">
           <div className="relative w-full sm:w-auto">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <Input
@@ -167,11 +167,11 @@ export default function StudentsContent() {
               className="pl-10 w-full"
             />
           </div>
-          <Button onClick={() => router.push('/dashboard/students/add')} className="flex items-center">
+          <Button onClick={() => router.push('/dashboard/students/add')} className="flex items-center mt-2 md:mt-0">
             <UserPlus className="mr-2 h-4 w-4" />
             Add Student
           </Button>
-          <Button  onClick={() => router.push('/dashboard/students/upload')} disabled={isUploading} className="flex items-center">
+          <Button  onClick={() => router.push('/dashboard/students/upload')} disabled={isUploading} className="flex items-center mt-2 md:mt-0">
             <Upload className="mr-2 h-4 w-4" />
             Upload Excel
           </Button>

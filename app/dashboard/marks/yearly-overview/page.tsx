@@ -18,7 +18,7 @@ export default function YearlyOverviewPage() {
   }, [selectedCategory]);
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-0 md:mx-auto">
       <h1 className="text-3xl font-bold mb-6">Yearly Overview</h1>
       <Card>
         <CardHeader>

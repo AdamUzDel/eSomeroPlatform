@@ -80,7 +80,7 @@ export default function StudentDetails() {
   }
 
   return (
-    <div className="container mx-auto py-10 px-4">
+    <div className="container mx-auto py-4 px-4">
       <Toaster />
       <Button variant="ghost" onClick={() => router.push('/dashboard/students')} className="mb-4">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Students

@@ -11,7 +11,7 @@ import { toast } from 'sonner'
 import { Class, StudentMark } from '@/types'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { Button } from "@/components/ui/button"
-import { PlusCircle, Edit } from 'lucide-react'
+import { PlusCircle, Edit, Calendar } from 'lucide-react'
 
 interface AverageMarkBySubject {
   subject: string;
@@ -148,20 +148,29 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
     router.push(`/dashboard/marks/edit/${studentId}?${queryParams}`)
   }, [router, selectedClass, selectedYear, selectedTerm])
 
+  const navigateToYearlyOverview = useCallback(() => {
+    router.push('/dashboard/marks/yearly-overview')
+  }, [router])
+
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold ">Marks Overview</h1>
+            <h1 className="text-3xl font-bold">Marks Overview</h1>
             <CardTitle className='hidden'>
               Marks Overview
             </CardTitle>
             <CardDescription>View and analyze student marks</CardDescription>
           </div>
-          <Button onClick={navigateToAddMarks}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Add Marks
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button onClick={navigateToAddMarks}>
+              <PlusCircle className="mr-2 h-4 w-4" /> Add Marks
+            </Button>
+            <Button onClick={navigateToYearlyOverview} variant="outline">
+              <Calendar className="mr-2 h-4 w-4" /> Yearly Overview
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -215,15 +224,15 @@ export function MarksOverview({ classes, years, terms }: MarksOverviewProps) {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Rank</TableHead>
-                      <TableHead>Student</TableHead>
+                      <TableHead className="sticky top-0 bg-background">Rank</TableHead>
+                      <TableHead className="sticky top-0 bg-background">Student</TableHead>
                       {subjects.map((subject) => (
-                        <TableHead key={subject}>{subject}</TableHead>
+                        <TableHead key={subject} className="sticky top-0 bg-background">{subject}</TableHead>
                       ))}
-                      <TableHead>Total</TableHead>
-                      <TableHead>Average</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead className="sticky top-0 bg-background">Total</TableHead>
+                      <TableHead className="sticky top-0 bg-background">Average</TableHead>
+                      <TableHead className="sticky top-0 bg-background">Status</TableHead>
+                      <TableHead className="sticky top-0 bg-background">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

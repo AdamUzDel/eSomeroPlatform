@@ -204,7 +204,7 @@ export default function EditStudentForm() {
   }
 
   return (
-    <div className="container mx-auto py-10 px-4">
+    <div className="container mx-auto py-4 px-4">
       <Toaster />
       <Button variant="ghost" onClick={() => router.push(`/dashboard/students/${stdId}`)} className="mb-4">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Student Details

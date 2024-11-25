@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function StudentsPage() {
   return (
-    <Card className="w-full">
+    <Card className="mx-4">
       <CardHeader>
         <h1 className="text-3xl font-bold ">Student Data</h1>
         <CardTitle className='hidden'>
