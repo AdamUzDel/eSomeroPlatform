@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { getYearlyStudentMarks } from '@/lib/firebaseUtils';
 import { calculateYearlyAverage, rankStudents } from '@/lib/marksUtils';
-import { YearlyStudentMarks, YearlyStudentMark } from '@/types';
+import { YearlyStudentMark } from '@/types';
 import { PrinterIcon } from 'lucide-react';
 
 interface YearlyOverviewProps {
