@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { LayoutDashboard, Users, FileText, Settings, Menu, X, Bell, LogOut, Eye, BookOpen, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { AccessibilityPanel } from '@/components/AccessibilityPanel'
+import ProtectedRoute from '@/components/ProtectedRoute'
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -153,99 +154,101 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   )
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex h-screen overflow-hidden">
-        {/* Sidebar for mobile */}
-        <div className={`fixed inset-0 z-40 md:hidden print:hidden ${sidebarOpen ? "" : "hidden"}`} role="dialog" aria-modal="true">
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" aria-hidden="true" onClick={() => setSidebarOpen(false)}></div>
-          <div className="relative flex w-full max-w-xs flex-1 flex-col bg-background">
-            <div className="absolute right-0 top-0 flex w-16 justify-center pt-5">
-              <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
-                <X className="h-6 w-6" />
-                <span className="sr-only">Close sidebar</span>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-background">
+        <div className="flex h-screen overflow-hidden">
+          {/* Sidebar for mobile */}
+          <div className={`fixed inset-0 z-40 md:hidden print:hidden ${sidebarOpen ? "" : "hidden"}`} role="dialog" aria-modal="true">
+            <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" aria-hidden="true" onClick={() => setSidebarOpen(false)}></div>
+            <div className="relative flex w-full max-w-xs flex-1 flex-col bg-background">
+              <div className="absolute right-0 top-0 flex w-16 justify-center pt-5">
+                <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
+                  <X className="h-6 w-6" />
+                  <span className="sr-only">Close sidebar</span>
+                </Button>
+              </div>
+              <SideNav isMobile />
+            </div>
+          </div>
+
+          {/* Static sidebar for desktop */}
+          <div className="hidden md:flex md:flex-shrink-0 print:hidden">
+            <SideNav />
+          </div>
+
+          <div className="flex flex-col w-0 flex-1 overflow-hidden">
+            <div className="relative z-10 flex h-16 flex-shrink-0 border-b bg-background print:hidden">
+              <Button variant="ghost" size="icon" className="px-4 items-center border-r md:hidden" onClick={() => setSidebarOpen(true)}>
+                <span className="sr-only">Open sidebar</span>
+                <Menu className="h-6 w-6" aria-hidden="true" />
               </Button>
+              <div className="flex flex-1 justify-between px-4">
+                <div className="flex flex-1 items-center">
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    {breadcrumbItems.map((item, index) => (
+                      <BreadcrumbItem key={item.path}>
+                        {index === breadcrumbItems.length - 1 ? (
+                          <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                        ) : (
+                          <>
+                            <BreadcrumbLink href={item.path}>{item.label}</BreadcrumbLink>
+                            <BreadcrumbSeparator />
+                          </>
+                        )}
+                      </BreadcrumbItem>
+                    ))}
+                  </BreadcrumbList>
+                </Breadcrumb>
+                </div>
+                <div className="ml-4 flex items-center md:ml-6">
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <Bell className="h-5 w-5" />
+                    <span className="sr-only">View notifications</span>
+                  </Button>
+                  <Button variant="ghost" size="icon" className="ml-3 rounded-full" onClick={() => setAccessibilityOpen(!accessibilityOpen)}>
+                    <Eye className="h-5 w-5" />
+                    <span className="sr-only">Accessibility options</span>
+                  </Button>
+
+                  {/* Profile dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="ml-3 flex items-center">
+                        <span className="sr-only">Open user menu</span>
+                        <Avatar>
+                          <AvatarImage src={user.avatar} alt={user.name} />
+                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="ml-2 text-sm font-medium hidden md:block">{user.name}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
+                      <DropdownMenuItem>{user.email}</DropdownMenuItem>
+                      <DropdownMenuItem>{user.role}</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Sign out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
             </div>
-            <SideNav isMobile />
+
+            <main className="flex-1 overflow-y-auto">
+              <div className="py-6">
+                <div className="sm:mx-2 md:mx-auto max-w-full md:max-w-7xl md:px-8">
+                  {children}
+                </div>
+              </div>
+            </main>
           </div>
         </div>
-
-        {/* Static sidebar for desktop */}
-        <div className="hidden md:flex md:flex-shrink-0 print:hidden">
-          <SideNav />
-        </div>
-
-        <div className="flex flex-col w-0 flex-1 overflow-hidden">
-          <div className="relative z-10 flex h-16 flex-shrink-0 border-b bg-background print:hidden">
-            <Button variant="ghost" size="icon" className="px-4 border-r md:hidden" onClick={() => setSidebarOpen(true)}>
-              <span className="sr-only">Open sidebar</span>
-              <Menu className="h-6 w-6" aria-hidden="true" />
-            </Button>
-            <div className="flex flex-1 justify-between px-4">
-              <div className="flex flex-1 items-center">
-              <Breadcrumb>
-                <BreadcrumbList>
-                  {breadcrumbItems.map((item, index) => (
-                    <BreadcrumbItem key={item.path}>
-                      {index === breadcrumbItems.length - 1 ? (
-                        <BreadcrumbPage>{item.label}</BreadcrumbPage>
-                      ) : (
-                        <>
-                          <BreadcrumbLink href={item.path}>{item.label}</BreadcrumbLink>
-                          <BreadcrumbSeparator />
-                        </>
-                      )}
-                    </BreadcrumbItem>
-                  ))}
-                </BreadcrumbList>
-              </Breadcrumb>
-              </div>
-              <div className="ml-4 flex items-center md:ml-6">
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <Bell className="h-5 w-5" />
-                  <span className="sr-only">View notifications</span>
-                </Button>
-                <Button variant="ghost" size="icon" className="ml-3 rounded-full" onClick={() => setAccessibilityOpen(!accessibilityOpen)}>
-                  <Eye className="h-5 w-5" />
-                  <span className="sr-only">Accessibility options</span>
-                </Button>
-
-                {/* Profile dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="ml-3 flex items-center">
-                      <span className="sr-only">Open user menu</span>
-                      <Avatar>
-                        <AvatarImage src={user.avatar} alt={user.name} />
-                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <span className="ml-2 text-sm font-medium hidden md:block">{user.name}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
-                    <DropdownMenuItem>{user.email}</DropdownMenuItem>
-                    <DropdownMenuItem>{user.role}</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Sign out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          </div>
-
-          <main className="flex-1 overflow-y-auto">
-            <div className="py-6">
-              <div className="sm:mx-2 md:mx-auto max-w-full md:max-w-7xl md:px-8">
-                {children}
-              </div>
-            </div>
-          </main>
-        </div>
+        <AccessibilityPanel open={accessibilityOpen} setOpen={setAccessibilityOpen} />
       </div>
-      <AccessibilityPanel open={accessibilityOpen} setOpen={setAccessibilityOpen} />
-    </div>
+    </ProtectedRoute>
   )
 }
