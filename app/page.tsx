@@ -47,7 +47,7 @@ export default function WelcomePage() {
           Enter School Dashboard
         </Button>
         <Button asChild variant="outline" size="lg">
-          <Link href="https://bytebasetech.com/projects/esomero">Learn More</Link>
+          <Link href="https://bytebasetech.com/products/esomero">Learn More</Link>
         </Button>
       </div>
       <div id="features" className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl">
